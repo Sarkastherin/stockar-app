@@ -6,6 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { useDarkMode } from "./hooks/useDarkMode";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -42,6 +43,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  useDarkMode();
   return <Outlet />;
 }
 
