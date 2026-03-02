@@ -1,0 +1,30 @@
+[ 
+	{
+		"id": "b3f5deab-6ec0-43e6-9d74-a6ab0d3c1101",
+		"create_at": "2026-01-05T09:00:00.000Z",
+		"update_at": "2026-01-05T09:00:00.000Z",
+		"active": true,
+		"name": "Alimentos"
+	},
+	{
+		"id": "1f4db7e8-17cc-41c4-8cf8-c3f0d4585e8b",
+		"create_at": "2026-01-05T09:00:00.000Z",
+		"update_at": "2026-01-07T10:30:00.000Z",
+		"active": true,
+		"name": "Bebidas"
+	},
+	{
+		"id": "7f16a134-f5eb-4ffd-9c42-fd6cd972f6f6",
+		"create_at": "2026-01-05T09:00:00.000Z",
+		"update_at": "2026-01-08T14:20:00.000Z",
+		"active": true,
+		"name": "Limpieza"
+	},
+	{
+		"id": "d6c6b7d9-2ef6-4d59-8f08-c2f65db1f9d4",
+		"create_at": "2026-01-05T09:00:00.000Z",
+		"update_at": "2026-01-09T16:45:00.000Z",
+		"active": true,
+		"name": "Higiene Personal"
+	}
+]

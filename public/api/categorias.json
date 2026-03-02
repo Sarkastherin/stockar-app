@@ -1,0 +1,58 @@
+[ 
+	{
+		"id": "4ac4d278-16ce-4254-8988-8eb70f50da6c",
+		"create_at": "2026-01-06T09:15:00.000Z",
+		"update_at": "2026-01-06T09:15:00.000Z",
+		"active": true,
+		"name": "Secos",
+		"id_family": "b3f5deab-6ec0-43e6-9d74-a6ab0d3c1101"
+	},
+	{
+		"id": "9c6a0bb2-77c9-4f98-b078-ec861bc878e6",
+		"create_at": "2026-01-06T09:15:00.000Z",
+		"update_at": "2026-01-07T11:40:00.000Z",
+		"active": true,
+		"name": "Perecederos",
+		"id_family": "b3f5deab-6ec0-43e6-9d74-a6ab0d3c1101"
+	},
+	{
+		"id": "2e084f95-ff96-4f0b-83b4-28f92f07f4f4",
+		"create_at": "2026-01-06T09:15:00.000Z",
+		"update_at": "2026-01-08T13:05:00.000Z",
+		"active": true,
+		"name": "Sin Alcohol",
+		"id_family": "1f4db7e8-17cc-41c4-8cf8-c3f0d4585e8b"
+	},
+	{
+		"id": "c281a6d5-9f66-442b-8e67-c0a4bc8ac40d",
+		"create_at": "2026-01-06T09:15:00.000Z",
+		"update_at": "2026-01-08T13:05:00.000Z",
+		"active": true,
+		"name": "Con Alcohol",
+		"id_family": "1f4db7e8-17cc-41c4-8cf8-c3f0d4585e8b"
+	},
+	{
+		"id": "5890b978-c26e-4718-aa04-6ad7f16b2f89",
+		"create_at": "2026-01-06T09:15:00.000Z",
+		"update_at": "2026-01-09T15:00:00.000Z",
+		"active": true,
+		"name": "Lavado",
+		"id_family": "7f16a134-f5eb-4ffd-9c42-fd6cd972f6f6"
+	},
+	{
+		"id": "dbd53985-4d97-4e57-9198-a89f4f7648e6",
+		"create_at": "2026-01-06T09:15:00.000Z",
+		"update_at": "2026-01-09T15:00:00.000Z",
+		"active": true,
+		"name": "Desinfección",
+		"id_family": "7f16a134-f5eb-4ffd-9c42-fd6cd972f6f6"
+	},
+	{
+		"id": "c2b0bd47-b6db-4b69-a6c4-48447863f31c",
+		"create_at": "2026-01-06T09:15:00.000Z",
+		"update_at": "2026-01-10T10:10:00.000Z",
+		"active": true,
+		"name": "Cuidado Corporal",
+		"id_family": "d6c6b7d9-2ef6-4d59-8f08-c2f65db1f9d4"
+	}
+]

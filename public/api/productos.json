@@ -1,0 +1,182 @@
+[ 
+	{
+		"id": "d8c49fd0-7d33-4f5d-a206-203a89c03279",
+		"create_at": "2026-01-15T09:00:00.000Z",
+		"update_at": "2026-01-15T09:00:00.000Z",
+		"active": true,
+		"name": "Arroz Largo Fino 1kg",
+		"id_subcategory": "38cf3c0d-f6f2-433d-8996-d53cb35427bf",
+		"id_unit": "8a2d5f0c-944a-4c57-9ec7-5e241f6a9d31"
+	},
+	{
+		"id": "3aee8bf8-ef34-49f6-8c4b-e6458f9c9385",
+		"create_at": "2026-01-15T09:05:00.000Z",
+		"update_at": "2026-01-15T09:05:00.000Z",
+		"active": true,
+		"name": "Arroz Integral 1kg",
+		"id_subcategory": "38cf3c0d-f6f2-433d-8996-d53cb35427bf",
+		"id_unit": "8a2d5f0c-944a-4c57-9ec7-5e241f6a9d31"
+	},
+	{
+		"id": "0c94ef32-2f1f-4dbf-9cd2-a9cae183021d",
+		"create_at": "2026-01-15T09:10:00.000Z",
+		"update_at": "2026-01-15T09:10:00.000Z",
+		"active": true,
+		"name": "Fideos Spaghetti 500g",
+		"id_subcategory": "c0a47411-08be-4a13-bafa-2438c5f1a6a5",
+		"id_unit": "f6d1b487-c8c5-4f49-a4cd-71d5d4b33f2d"
+	},
+	{
+		"id": "f8cb00f6-f76d-474e-a0c4-e1f5bca6b7ff",
+		"create_at": "2026-01-15T09:15:00.000Z",
+		"update_at": "2026-01-15T09:15:00.000Z",
+		"active": true,
+		"name": "Fideos Tirabuzón 500g",
+		"id_subcategory": "c0a47411-08be-4a13-bafa-2438c5f1a6a5",
+		"id_unit": "f6d1b487-c8c5-4f49-a4cd-71d5d4b33f2d"
+	},
+	{
+		"id": "610635a0-3f00-4518-95ca-d4f87c9eb8f5",
+		"create_at": "2026-01-15T09:20:00.000Z",
+		"update_at": "2026-01-15T09:20:00.000Z",
+		"active": true,
+		"name": "Leche Entera 1L",
+		"id_subcategory": "a467e51f-9f0e-44d4-bf23-d12339552935",
+		"id_unit": "1df2ad22-84b4-4fc7-b3f6-4efdf56cc9df"
+	},
+	{
+		"id": "6456f80a-3e2b-4b03-a3d8-57d88eec9fd1",
+		"create_at": "2026-01-15T09:25:00.000Z",
+		"update_at": "2026-01-15T09:25:00.000Z",
+		"active": true,
+		"name": "Yogur Natural 1L",
+		"id_subcategory": "a467e51f-9f0e-44d4-bf23-d12339552935",
+		"id_unit": "1df2ad22-84b4-4fc7-b3f6-4efdf56cc9df"
+	},
+	{
+		"id": "dfb9a677-b815-4b95-8409-85efb885fd16",
+		"create_at": "2026-01-15T09:30:00.000Z",
+		"update_at": "2026-01-15T09:30:00.000Z",
+		"active": true,
+		"name": "Carne Picada Vacuna 1kg",
+		"id_subcategory": "b8edce6f-f293-419e-bc5d-f15deb986f50",
+		"id_unit": "8a2d5f0c-944a-4c57-9ec7-5e241f6a9d31"
+	},
+	{
+		"id": "2a2cf8d6-2ad0-4588-83c6-8eb35c439b85",
+		"create_at": "2026-01-15T09:35:00.000Z",
+		"update_at": "2026-01-15T09:35:00.000Z",
+		"active": true,
+		"name": "Milanesa de Pollo 1kg",
+		"id_subcategory": "b8edce6f-f293-419e-bc5d-f15deb986f50",
+		"id_unit": "8a2d5f0c-944a-4c57-9ec7-5e241f6a9d31"
+	},
+	{
+		"id": "f2e560f2-5f7f-492b-95ba-fdc27a62fef0",
+		"create_at": "2026-01-15T09:40:00.000Z",
+		"update_at": "2026-01-15T09:40:00.000Z",
+		"active": true,
+		"name": "Gaseosa Cola 2L",
+		"id_subcategory": "0aabf6a9-5fb7-4ebe-8438-7ffdfca4f7da",
+		"id_unit": "1df2ad22-84b4-4fc7-b3f6-4efdf56cc9df"
+	},
+	{
+		"id": "a26f8a38-8306-4658-a6a8-bdd4987a4baf",
+		"create_at": "2026-01-15T09:45:00.000Z",
+		"update_at": "2026-01-15T09:45:00.000Z",
+		"active": true,
+		"name": "Gaseosa Lima Limón 2L",
+		"id_subcategory": "0aabf6a9-5fb7-4ebe-8438-7ffdfca4f7da",
+		"id_unit": "1df2ad22-84b4-4fc7-b3f6-4efdf56cc9df"
+	},
+	{
+		"id": "5f1e880d-388f-4c7d-b16a-7226419cfd26",
+		"create_at": "2026-01-15T09:50:00.000Z",
+		"update_at": "2026-01-15T09:50:00.000Z",
+		"active": true,
+		"name": "Jugo de Naranja 1L",
+		"id_subcategory": "f94d9f2a-0bd6-4ba6-81f5-a993f3558f0f",
+		"id_unit": "1df2ad22-84b4-4fc7-b3f6-4efdf56cc9df"
+	},
+	{
+		"id": "0ba52964-8fe1-4707-9896-cf3f7b4782ef",
+		"create_at": "2026-01-15T09:55:00.000Z",
+		"update_at": "2026-01-15T09:55:00.000Z",
+		"active": true,
+		"name": "Jugo Multifruta 1L",
+		"id_subcategory": "f94d9f2a-0bd6-4ba6-81f5-a993f3558f0f",
+		"id_unit": "1df2ad22-84b4-4fc7-b3f6-4efdf56cc9df"
+	},
+	{
+		"id": "81917266-39b5-49e0-a0c4-091045f786f7",
+		"create_at": "2026-01-15T10:00:00.000Z",
+		"update_at": "2026-01-15T10:00:00.000Z",
+		"active": true,
+		"name": "Cerveza Rubia Lata 473ml",
+		"id_subcategory": "d09be2e8-1ed3-4626-8bd9-39495f56d48f",
+		"id_unit": "2fe7f11b-e8a8-4f73-9dc0-c9f95f8f4bb6"
+	},
+	{
+		"id": "8cf33ec5-2264-4f4d-8f43-0fd12c808376",
+		"create_at": "2026-01-15T10:05:00.000Z",
+		"update_at": "2026-01-15T10:05:00.000Z",
+		"active": true,
+		"name": "Cerveza Negra Lata 473ml",
+		"id_subcategory": "d09be2e8-1ed3-4626-8bd9-39495f56d48f",
+		"id_unit": "2fe7f11b-e8a8-4f73-9dc0-c9f95f8f4bb6"
+	},
+	{
+		"id": "12846962-88c0-4f0a-9518-14d1d7c80640",
+		"create_at": "2026-01-15T10:10:00.000Z",
+		"update_at": "2026-01-15T10:10:00.000Z",
+		"active": true,
+		"name": "Vino Tinto 750ml",
+		"id_subcategory": "b2b7326f-2d5d-47f7-bda4-b5ac6f895017",
+		"id_unit": "2fe7f11b-e8a8-4f73-9dc0-c9f95f8f4bb6"
+	},
+	{
+		"id": "7b7f9c5e-2fc2-43cb-b6a3-9b1fb4b9ea62",
+		"create_at": "2026-01-15T10:15:00.000Z",
+		"update_at": "2026-01-15T10:15:00.000Z",
+		"active": true,
+		"name": "Vino Blanco 750ml",
+		"id_subcategory": "b2b7326f-2d5d-47f7-bda4-b5ac6f895017",
+		"id_unit": "2fe7f11b-e8a8-4f73-9dc0-c9f95f8f4bb6"
+	},
+	{
+		"id": "6142ed13-444d-4f8a-b17d-f93e55f6da18",
+		"create_at": "2026-01-15T10:20:00.000Z",
+		"update_at": "2026-01-15T10:20:00.000Z",
+		"active": true,
+		"name": "Detergente Líquido 500ml",
+		"id_subcategory": "438cceeb-cf4d-4f8b-a87d-40ce13e7cf3e",
+		"id_unit": "2fe7f11b-e8a8-4f73-9dc0-c9f95f8f4bb6"
+	},
+	{
+		"id": "74dd854d-3a54-455e-bf49-639e2f18b9ad",
+		"create_at": "2026-01-15T10:25:00.000Z",
+		"update_at": "2026-01-15T10:25:00.000Z",
+		"active": true,
+		"name": "Lavandina 1L",
+		"id_subcategory": "4f4900c5-2a00-4ed8-af75-4ab3f1ecf22a",
+		"id_unit": "1df2ad22-84b4-4fc7-b3f6-4efdf56cc9df"
+	},
+	{
+		"id": "91e0d5ac-8973-4a30-aac6-834fef3137f0",
+		"create_at": "2026-01-15T10:30:00.000Z",
+		"update_at": "2026-01-15T10:30:00.000Z",
+		"active": true,
+		"name": "Jabón en Barra 125g",
+		"id_subcategory": "1e2d1d9f-8d2e-46ac-8cc2-f7ad29504efa",
+		"id_unit": "f6d1b487-c8c5-4f49-a4cd-71d5d4b33f2d"
+	},
+	{
+		"id": "2d1ec85b-5280-4ccf-b019-a6f7debe62d9",
+		"create_at": "2026-01-15T10:35:00.000Z",
+		"update_at": "2026-01-15T10:35:00.000Z",
+		"active": true,
+		"name": "Shampoo Anticaspa 400ml",
+		"id_subcategory": "390f781e-a0ec-4c5b-92a5-34d9e39ff4b6",
+		"id_unit": "2fe7f11b-e8a8-4f73-9dc0-c9f95f8f4bb6"
+	}
+]
