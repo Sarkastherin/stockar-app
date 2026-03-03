@@ -10,8 +10,10 @@ import { useDarkMode } from "./hooks/useDarkMode";
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { ModalProvider } from "./context/ModalContext";
 
 export const links: Route.LinksFunction = () => [
+  { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
     rel: "preconnect",
@@ -44,7 +46,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   useDarkMode();
-  return <Outlet />;
+  return (
+    <ModalProvider>
+      <Outlet />
+    </ModalProvider>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

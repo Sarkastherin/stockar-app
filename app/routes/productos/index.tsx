@@ -3,10 +3,13 @@ import Table from "~/components/Table";
 import type { ProductoConDetalles } from "~/types/productos";
 import type { TableColumn } from "react-data-table-component";
 import { useDataContext } from "~/context/DataContext";
-import { useEffect } from "react";
+import { use, useEffect } from "react";
 import { Spinner } from "flowbite-react";
 import { SubTitles } from "~/components/SubTitles";
 import { AiOutlineProduct } from "react-icons/ai";
+import { useModal } from "~/context/ModalContext";
+import { ProductosModal } from "~/components/modals/customs/ProductosModal";
+import { useProductos } from "~/hooks/useProductos";
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "StockAR" },
@@ -25,12 +28,28 @@ const columns: TableColumn<ProductoConDetalles>[] = [
   { name: "Familia", selector: (row) => row.family.name, sortable: true },
   { name: "Unidad", selector: (row) => row.unit.name, sortable: true },
 ];
-const data: ProductoConDetalles[] = [];
+
 export default function Productos() {
+  const { openModal } = useModal();
+
+  const { form, onSubmit } = useProductos();
   const { productosConDetalles, getProductosConDetalles } = useDataContext();
   useEffect(() => {
     if (!productosConDetalles) getProductosConDetalles();
   }, []);
+  function handleRowClick(row: ProductoConDetalles) {
+    // Crear un nuevo formulario para este producto
+    const newForm = form;
+    newForm.reset(row);
+    openModal("form", {
+      component: ProductosModal,
+      props: {
+        form: newForm,
+        title: "Editar producto: " + row.name,
+      },
+      onSubmit: form.handleSubmit(onSubmit),
+    });
+  }
   if (!productosConDetalles) {
     return (
       <div className="flex justify-center items-center">
@@ -48,7 +67,11 @@ export default function Productos() {
           color: "text-blue-600 dark:text-blue-400",
         }}
       />
-      <Table columns={columns} data={productosConDetalles} />
+      <Table
+        columns={columns}
+        data={productosConDetalles}
+        onRowClick={handleRowClick}
+      />
     </div>
   );
 }

@@ -11,6 +11,14 @@ import type {
 type DataContextType = {
   productosConDetalles: ProductoConDetalles[] | null;
   getProductosConDetalles: () => Promise<void>;
+  subcategorias: SubcategoriaDB[] | null;
+  categorias: CategoriaDB[] | null;
+  familias: FamiliaDB[] | null;
+  unidades: UnidadesDB[] | null;
+  getSubcategorias: () => Promise<void>;
+  getCategorias: () => Promise<void>;
+  getFamilias: () => Promise<void>;
+  getUnidades: () => Promise<void>;
 };
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -170,8 +178,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   return (
     <DataContext.Provider
       value={{
+        subcategorias,
+        categorias,
+        familias,
+        unidades,
+        getSubcategorias,
+        getCategorias,
+        getFamilias,
         productosConDetalles,
         getProductosConDetalles,
+        getUnidades
       }}
     >
       {children}
