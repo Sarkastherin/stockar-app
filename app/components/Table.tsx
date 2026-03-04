@@ -4,8 +4,9 @@ import DataTable, {
   type TableColumn,
 } from "react-data-table-component";
 import { useLocation } from "react-router";
-import { TextInput, Select, Label, Button, useThemeMode } from "flowbite-react";
+import { Button, useThemeMode } from "flowbite-react";
 import { NavLink } from "react-router";
+import { Input, Select } from "./forms/InputsForm";
 function getNestedValue(obj: any, path: string): any {
   return path.split(".").reduce((acc, part) => acc?.[part], obj);
 }
@@ -101,8 +102,8 @@ export type FilterField = {
   key: string;
   label: string;
   type?: "text" | "select" | "dateRange";
-  options?: React.ReactNode;
-  autoFilter?: boolean;
+  options?: { value: string; label: string }[];
+  manualFilter?: boolean; // Si es true, requiere clic en botón Filtrar. Por defecto filtra automáticamente
 };
 
 type TableProps<T> = {
@@ -123,6 +124,7 @@ type TableProps<T> = {
   btnOnClick?: {
     onClick: () => void;
     title: string;
+    color?: "default" | "primary" | "success" | "cyan" | "indigo";
   };
 };
 type CurrentSort = {
@@ -275,7 +277,7 @@ export default function Table<T>({
     if (onFilteredChange) onFilteredChange(result);
   };
 
-  const handleChange = (key: string, value: string, auto?: boolean) => {
+  const handleChange = (key: string, value: string, manual?: boolean) => {
     const updated = { ...filters, [key]: value };
     setFilters(updated);
     localStorage.setItem(storageKey, JSON.stringify(updated)); // Guarda filtros
@@ -284,7 +286,8 @@ export default function Table<T>({
     setCurrentPage(1);
     localStorage.setItem(`${storageKey}_page`, "1");
 
-    if (auto) onFilter(updated);
+    // Si NO es manual (por defecto es automático), aplicar filtro inmediatamente
+    if (!manual) onFilter(updated);
   };
 
   // Función para manejar el cambio de página
@@ -348,79 +351,73 @@ export default function Table<T>({
       )}
       {filterFields.length > 0 && (
         <form
-          className="flex gap-2 items-baseline md:flex-row flex-col"
+          className="flex gap-2 md:flex-row flex-col mb-6"
           onSubmit={(e) => {
             e.preventDefault();
             onFilter(filters);
           }}
         >
           {filterFields.map(
-            ({ key, label, type = "text", options, autoFilter }) => (
+            ({ key, label, type = "text", options, manualFilter }) => (
               <div key={key} className="w-full">
                 {type === "dateRange" ? (
                   <div className="flex gap-2 items-center">
-                    <Label htmlFor={`${key}_from`} className="text-sm">
-                      {label} desde
-                    </Label>
-                    <TextInput
+                    <Input
+                      label={`${label} desde`}
                       id={`${key}_from`}
                       type="date"
                       value={filters[`${key}_from`] ?? ""}
                       onChange={(e) =>
-                        handleChange(`${key}_from`, e.target.value, autoFilter)
+                        handleChange(
+                          `${key}_from`,
+                          e.target.value,
+                          manualFilter,
+                        )
                       }
                     />
-                    <Label htmlFor={`${key}_to`} className="text-sm">
-                      {label} hasta
-                    </Label>
-                    <TextInput
+                    <Input
+                      label={`${label} hasta`}
                       id={`${key}_to`}
                       type="date"
                       value={filters[`${key}_to`] ?? ""}
                       onChange={(e) =>
-                        handleChange(`${key}_to`, e.target.value, autoFilter)
+                        handleChange(`${key}_to`, e.target.value, manualFilter)
                       }
                     />
                   </div>
                 ) : type === "select" ? (
                   <>
-                    <Label htmlFor={key} className="text-sm">
-                      {label}
-                    </Label>
                     <Select
+                      label={label}
                       id={key}
                       value={filters[key] ?? ""}
                       onChange={(e) =>
-                        handleChange(key, e.target.value, autoFilter)
+                        handleChange(key, e.target.value, manualFilter)
                       }
-                    >
-                      {options}
-                    </Select>
-                  </>
-                ) : (
-                  <>
-                    <Label htmlFor={key} className="text-sm">
-                      {label}
-                    </Label>
-                    <TextInput
-                      type="search"
-                      placeholder={label}
-                      value={filters[key] ?? ""}
-                      onChange={(e) =>
-                        handleChange(key, e.target.value, autoFilter)
-                      }
+                      options={options?.map((op) => ({
+                        value: op.value,
+                        label: op.label,
+                      })) || []}
                     />
                   </>
+                ) : (
+                  <Input
+                    label={label}
+                    id={key}
+                    type="search"
+                    value={filters[key] ?? ""}
+                    onChange={(e) =>
+                      handleChange(key, e.target.value, manualFilter)
+                    }
+                  />
                 )}
               </div>
             ),
           )}
-          {!filterFields.every((f) => f.autoFilter) && (
-            <div className="w-fit">
-              <Button color="yellow" type="submit">
-                Filtrar
-              </Button>
-            </div>
+          {filterFields.some((f) => f.manualFilter) && (
+            <Button color="yellow" type="submit">
+              Filtrar
+            </Button>
           )}
         </form>
       )}
@@ -459,14 +456,14 @@ export default function Table<T>({
 
             {btnNavigate && (
               <NavLink to={btnNavigate.route}>
-                <Button color={"cyan"}>{btnNavigate.title}</Button>
+                <Button color={"indigo"}>{btnNavigate.title}</Button>
               </NavLink>
             )}
             {btnOnClick && (
               <Button
                 size="sm"
                 className="ms-auto"
-                color={"cyan"}
+                color={btnOnClick.color || "default"}
                 onClick={btnOnClick.onClick}
               >
                 {btnOnClick.title}

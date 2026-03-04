@@ -27,7 +27,7 @@ export default function ModalManager() {
               son obligatorios
             </div>
               <Button
-              color={"cyan"}
+              color={"indigo"}
               onClick={formProps.onSubmit}
             >
               Guardar

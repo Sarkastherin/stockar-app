@@ -1,6 +1,6 @@
 export type CommonPropsDB = {
   id: string;
-  create_at: string;
-  update_at: string;
+  created_at: string;
+  updated_at: string;
   active?: boolean;
 };

@@ -14,7 +14,7 @@ export const SubTitles = ({
 }) => {
   const ArrowIcon = getIcon({
     icon: RiArrowGoBackFill,
-    size: 5,
+    size: 24,
     color: "text-gray-600 dark:text-gray-400",
   });
   return (
@@ -28,10 +28,12 @@ export const SubTitles = ({
           {ArrowIcon}
         </NavLink>
       )}
-      <h2 className="text-2xl font-semibold flex items-center gap-2">
-        {title}
-        {icon && getIcon({ icon: icon.component, size: 6, color: icon.color })}
-      </h2>
+      <div className="flex gap-2 items-center">
+        <h2 className="text-2xl font-semibold">
+          {title}
+        </h2>
+        {icon && getIcon({ icon: icon.component, size: 28, color: icon.color })}
+      </div>
     </div>
   );
 };

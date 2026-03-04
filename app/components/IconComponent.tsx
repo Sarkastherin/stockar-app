@@ -12,7 +12,8 @@ export const getIcon = ({
   const IconComponent: IconType = icon;
   return (
     <IconComponent
-      className={`w-${size || 6} h-${size || 6} ${color ? color : ""}`}
+      size={size || 24}
+      className={color ? color : ""}
     />
   );
 };

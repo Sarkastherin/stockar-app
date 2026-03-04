@@ -4,18 +4,27 @@ import { InfoField } from "~/components/forms/InfoField";
 import { Spinner } from "flowbite-react";
 import { useFormState, type UseFormReturn } from "react-hook-form";
 import { useDataContext } from "~/context/DataContext";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
+
+const formatDateTime = (value?: string) => {
+  if (!value) return undefined;
+  return new Date(value).toLocaleString("es-ES", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 export function ProductosModal({
   props,
 }: {
   props: {
-    data?: ProductoConDetalles;
     title: string;
     form: UseFormReturn<ProductoConDetalles>;
   };
 }) {
-  const [loading, setLoading] = useState(true);
   const {
     subcategorias,
     categorias,
@@ -26,37 +35,94 @@ export function ProductosModal({
     getFamilias,
     getUnidades,
   } = useDataContext();
-  const loadData = () => {
+
+  const loadData = useCallback(() => {
     if (!subcategorias) getSubcategorias();
     if (!categorias) getCategorias();
     if (!familias) getFamilias();
     if (!unidades) getUnidades();
-  };
+  }, [
+    subcategorias,
+    categorias,
+    familias,
+    unidades,
+    getSubcategorias,
+    getCategorias,
+    getFamilias,
+    getUnidades,
+  ]);
+
   useEffect(() => {
     loadData();
-    setLoading(false);
-  }, []);
+  }, [loadData]);
+
   const { register, control, watch, setValue } = props.form;
   const { errors } = useFormState({ control });
   const familiaId = watch("family.id") || "";
   const categoriaId = watch("category.id") || "";
+  const createdAt = watch("created_at");
+  const updatedAt = watch("updated_at");
+  const active = watch("active");
 
-  const changeFamily = (id_family: string) => {
+  const familiasOptions = useMemo(
+    () =>
+      familias?.map((fam) => ({
+        value: fam.id,
+        label: fam.name,
+      })) || [],
+    [familias],
+  );
+
+  const categoriasFiltradasOptions = useMemo(
+    () =>
+      categorias
+        ?.filter((cat) => cat.id_family === familiaId)
+        .map((cat) => ({
+          value: cat.id,
+          label: cat.name,
+        })) || [],
+    [categorias, familiaId],
+  );
+
+  const subcategoriasFiltradasOptions = useMemo(
+    () =>
+      subcategorias
+        ?.filter((sub) => sub.id_categoria === categoriaId)
+        .map((sub) => ({
+          value: sub.id,
+          label: sub.name,
+        })) || [],
+    [subcategorias, categoriaId],
+  );
+
+  const unidadesOptions = useMemo(
+    () =>
+      unidades?.map((unit) => ({
+        value: unit.id,
+        label: unit.name,
+      })) || [],
+    [unidades],
+  );
+
+  const isLoading = !subcategorias || !categorias || !familias || !unidades;
+
+  const changeFamily = useCallback((id_family: string) => {
     const selectedFamily = familias?.find((fam) => fam.id === id_family);
     setValue("family.id", id_family, { shouldDirty: true, shouldValidate: true });
     setValue("family", selectedFamily as any, { shouldDirty: true, shouldValidate: true });
     setValue("category.id", "", { shouldDirty: true, shouldValidate: true });
     setValue("category", undefined as any, { shouldDirty: true, shouldValidate: true });
     setValue("id_subcategory", "", { shouldDirty: true, shouldValidate: true });
-  };
+  }, [familias, setValue]);
 
-  const changeCategory = (id_category: string) => {
+  const changeCategory = useCallback((id_category: string) => {
     const selectedCategory = categorias?.find((cat) => cat.id === id_category);
     setValue("category.id", id_category, { shouldDirty: true, shouldValidate: true });
     setValue("category", selectedCategory as any, { shouldDirty: true, shouldValidate: true });
     setValue("id_subcategory", "", { shouldDirty: true, shouldValidate: true });
-  };
-  if (loading) {
+  }, [categorias, setValue]);
+
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center">
         <Spinner aria-label="Cargando productos..." />
@@ -75,12 +141,7 @@ export function ProductosModal({
       />
       <Select
         label="Familia"
-        options={
-          familias?.map((fam) => ({
-            value: fam.id,
-            label: fam.name,
-          })) || []
-        }
+        options={familiasOptions}
         required
         {...register("family.id", {
           required: "La familia es obligatoria",
@@ -96,14 +157,7 @@ export function ProductosModal({
       <Select
         label="Categoria"
         disabled={!familiaId}
-        options={
-          categorias
-            ?.filter((cat) => cat.id_family === familiaId)
-            ?.map((cat) => ({
-              value: cat.id,
-              label: cat.name,
-            })) || []
-        }
+        options={categoriasFiltradasOptions}
         {...register("category.id", {
           required: "La categoria es obligatoria",
           onChange: (e) => {
@@ -118,31 +172,19 @@ export function ProductosModal({
         disabled={!categoriaId}
         label="Subcategoria"
         emptyOption={`Seleccione una subcategoria${!categoriaId ? " (Seleccione una categoria primero)" : ""}`}
-        options={
-          subcategorias
-            ?.filter((sub) => sub.id_categoria === categoriaId)
-            ?.map((sub) => ({
-              value: sub.id,
-              label: sub.name,
-            })) || []
-        }
+        options={subcategoriasFiltradasOptions}
         {...register("id_subcategory", {required: "La subcategoria es obligatoria"})}
         error={errors.id_subcategory?.message}
       />
       <Select
         label="Unidad"
-        options={
-          unidades?.map((unit) => ({
-            value: unit.id,
-            label: unit.name,
-          })) || []
-        }
+        options={unidadesOptions}
         {...register("id_unit", {required: "La unidad es obligatoria"})}
         error={errors.id_unit?.message}
       />
       
       {/* Sección de información de solo lectura */}
-      {(props.form.watch("create_at") || props.form.watch("update_at")) && (
+      {(createdAt || updatedAt) && (
         <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
           <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
             Información del registro
@@ -150,27 +192,15 @@ export function ProductosModal({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <InfoField 
               label="Fecha de creación" 
-              value={props.form.watch("create_at") ? new Date(props.form.watch("create_at")).toLocaleString('es-ES', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-              }) : undefined}
+              value={formatDateTime(createdAt)}
             />
             <InfoField 
               label="Última actualización" 
-              value={props.form.watch("update_at") ? new Date(props.form.watch("update_at")).toLocaleString('es-ES', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-              }) : undefined}
+              value={formatDateTime(updatedAt)}
             />
             <InfoField 
               label="Estado" 
-              value={props.form.watch("active")}
+              value={active}
             />
           </div>
         </div>

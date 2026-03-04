@@ -58,8 +58,8 @@ export default function Productos() {
       family: { id: "", name: "" },
       category: { id: "", name: "" },
       unit: { id: "", name: "" }, 
-      create_at: "",
-      update_at: "",
+      created_at: "",
+      updated_at: "",
       id: "",
     } as ProductoConDetalles);
     newForm.clearErrors();
@@ -93,7 +93,7 @@ export default function Productos() {
         columns={columns}
         data={productosConDetalles}
         onRowClick={handleRowClick}
-        btnOnClick={{ title: "Nuevo producto", onClick: handleNewProduct }}
+        btnOnClick={{ title: "Nuevo producto", onClick: handleNewProduct, color: "indigo" }}
       />
     </div>
   );
