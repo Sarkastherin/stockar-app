@@ -5,7 +5,7 @@
 		"updated_at": "2026-01-07T08:30:00.000Z",
 		"active": true,
 		"name": "Arroz",
-		"id_categoria": "4ac4d278-16ce-4254-8988-8eb70f50da6c"
+		"id_category": "4ac4d278-16ce-4254-8988-8eb70f50da6c"
 	},
 	{
 		"id": "c0a47411-08be-4a13-bafa-2438c5f1a6a5",
@@ -13,7 +13,7 @@
 		"updated_at": "2026-01-07T08:30:00.000Z",
 		"active": true,
 		"name": "Fideos",
-		"id_categoria": "4ac4d278-16ce-4254-8988-8eb70f50da6c"
+		"id_category": "4ac4d278-16ce-4254-8988-8eb70f50da6c"
 	},
 	{
 		"id": "a467e51f-9f0e-44d4-bf23-d12339552935",
@@ -21,7 +21,7 @@
 		"updated_at": "2026-01-08T12:00:00.000Z",
 		"active": true,
 		"name": "Lácteos",
-		"id_categoria": "9c6a0bb2-77c9-4f98-b078-ec861bc878e6"
+		"id_category": "9c6a0bb2-77c9-4f98-b078-ec861bc878e6"
 	},
 	{
 		"id": "b8edce6f-f293-419e-bc5d-f15deb986f50",
@@ -29,7 +29,7 @@
 		"updated_at": "2026-01-08T12:00:00.000Z",
 		"active": true,
 		"name": "Carnes",
-		"id_categoria": "9c6a0bb2-77c9-4f98-b078-ec861bc878e6"
+		"id_category": "9c6a0bb2-77c9-4f98-b078-ec861bc878e6"
 	},
 	{
 		"id": "0aabf6a9-5fb7-4ebe-8438-7ffdfca4f7da",
@@ -37,7 +37,7 @@
 		"updated_at": "2026-01-09T09:40:00.000Z",
 		"active": true,
 		"name": "Gaseosas",
-		"id_categoria": "2e084f95-ff96-4f0b-83b4-28f92f07f4f4"
+		"id_category": "2e084f95-ff96-4f0b-83b4-28f92f07f4f4"
 	},
 	{
 		"id": "f94d9f2a-0bd6-4ba6-81f5-a993f3558f0f",
@@ -45,7 +45,7 @@
 		"updated_at": "2026-01-09T09:40:00.000Z",
 		"active": true,
 		"name": "Jugos",
-		"id_categoria": "2e084f95-ff96-4f0b-83b4-28f92f07f4f4"
+		"id_category": "2e084f95-ff96-4f0b-83b4-28f92f07f4f4"
 	},
 	{
 		"id": "d09be2e8-1ed3-4626-8bd9-39495f56d48f",
@@ -53,7 +53,7 @@
 		"updated_at": "2026-01-10T11:20:00.000Z",
 		"active": true,
 		"name": "Cerveza",
-		"id_categoria": "c281a6d5-9f66-442b-8e67-c0a4bc8ac40d"
+		"id_category": "c281a6d5-9f66-442b-8e67-c0a4bc8ac40d"
 	},
 	{
 		"id": "b2b7326f-2d5d-47f7-bda4-b5ac6f895017",
@@ -61,7 +61,7 @@
 		"updated_at": "2026-01-10T11:20:00.000Z",
 		"active": true,
 		"name": "Vino",
-		"id_categoria": "c281a6d5-9f66-442b-8e67-c0a4bc8ac40d"
+		"id_category": "c281a6d5-9f66-442b-8e67-c0a4bc8ac40d"
 	},
 	{
 		"id": "438cceeb-cf4d-4f8b-a87d-40ce13e7cf3e",
@@ -69,7 +69,7 @@
 		"updated_at": "2026-01-11T10:00:00.000Z",
 		"active": true,
 		"name": "Detergentes",
-		"id_categoria": "5890b978-c26e-4718-aa04-6ad7f16b2f89"
+		"id_category": "5890b978-c26e-4718-aa04-6ad7f16b2f89"
 	},
 	{
 		"id": "4f4900c5-2a00-4ed8-af75-4ab3f1ecf22a",
@@ -77,7 +77,7 @@
 		"updated_at": "2026-01-11T10:00:00.000Z",
 		"active": true,
 		"name": "Lavandina",
-		"id_categoria": "dbd53985-4d97-4e57-9198-a89f4f7648e6"
+		"id_category": "dbd53985-4d97-4e57-9198-a89f4f7648e6"
 	},
 	{
 		"id": "1e2d1d9f-8d2e-46ac-8cc2-f7ad29504efa",
@@ -85,7 +85,7 @@
 		"updated_at": "2026-01-12T09:15:00.000Z",
 		"active": true,
 		"name": "Jabones",
-		"id_categoria": "c2b0bd47-b6db-4b69-a6c4-48447863f31c"
+		"id_category": "c2b0bd47-b6db-4b69-a6c4-48447863f31c"
 	},
 	{
 		"id": "390f781e-a0ec-4c5b-92a5-34d9e39ff4b6",
@@ -93,7 +93,7 @@
 		"updated_at": "2026-01-12T09:15:00.000Z",
 		"active": true,
 		"name": "Shampoo",
-		"id_categoria": "c2b0bd47-b6db-4b69-a6c4-48447863f31c"
+		"id_category": "c2b0bd47-b6db-4b69-a6c4-48447863f31c"
 	},
 	{
 		"id": "a5d8e2f1-9c3e-4f2a-8d1b-5e9c3a7f2d4b",
@@ -101,38 +101,38 @@
 		"updated_at": "2026-01-13T08:00:00.000Z",
 		"active": true,
 		"name": "Pan",
-		"id_categoria": "4ac4d278-16ce-4254-8988-8eb70f50da6c"
+		"id_category": "4ac4d278-16ce-4254-8988-8eb70f50da6c"
 	},
 	{
-		"id": "b6e9f3g2-0d4f-5g3b-9e2c-6f0d4b8e3f5c",
+		"id": "b6e9f3a2-0d4f-5a3b-9e2c-6f0d4b8e3f5c",
 		"created_at": "2026-01-14T08:00:00.000Z",
 		"updated_at": "2026-01-14T08:00:00.000Z",
 		"active": true,
 		"name": "Quesos",
-		"id_categoria": "9c6a0bb2-77c9-4f98-b078-ec861bc878e6"
+		"id_category": "9c6a0bb2-77c9-4f98-b078-ec861bc878e6"
 	},
 	{
-		"id": "c7f0g4h3-1e5g-6h4c-0f3d-7g1e5c9f4g6d",
+		"id": "c7f0a4b3-1e5a-6b4c-0f3d-7a1e5c9f4a6d",
 		"created_at": "2026-01-15T08:00:00.000Z",
 		"updated_at": "2026-01-15T08:00:00.000Z",
 		"active": true,
 		"name": "Café",
-		"id_categoria": "2e084f95-ff96-4f0b-83b4-28f92f07f4f4"
+		"id_category": "2e084f95-ff96-4f0b-83b4-28f92f07f4f4"
 	},
 	{
-		"id": "d8g1h5i4-2f6h-7i5d-1g4e-8h2f6d0g5h7e",
+		"id": "d8a1b5c4-2f6a-7c5d-1a4e-8b2f6d0a5b7e",
 		"created_at": "2026-01-16T08:00:00.000Z",
 		"updated_at": "2026-01-16T08:00:00.000Z",
 		"active": true,
 		"name": "Té",
-		"id_categoria": "2e084f95-ff96-4f0b-83b4-28f92f07f4f4"
+		"id_category": "2e084f95-ff96-4f0b-83b4-28f92f07f4f4"
 	},
 	{
-		"id": "e9h2i6j5-3g7i-8j6e-2h5f-9i3g7e1h6i8f",
+		"id": "e9b2c6d5-3a7b-8d6e-2b5f-9c3a7e1b6c8f",
 		"created_at": "2026-01-17T08:00:00.000Z",
 		"updated_at": "2026-01-17T08:00:00.000Z",
 		"active": true,
 		"name": "Aceite de oliva",
-		"id_categoria": "4ac4d278-16ce-4254-8988-8eb70f50da6c"
+		"id_category": "4ac4d278-16ce-4254-8988-8eb70f50da6c"
 	}
 ]

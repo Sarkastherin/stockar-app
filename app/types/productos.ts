@@ -6,7 +6,7 @@ export type UnidadesDB = CommonPropsDB & {
 };
 export type SubcategoriaDB = CommonPropsDB & {
   name: string;
-  id_categoria: string;
+  id_category: string;
 };
 export type CategoriaDB = CommonPropsDB & {
   name: string;

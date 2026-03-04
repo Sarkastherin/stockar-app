@@ -53,7 +53,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const getProductos = async () => {
     try {
       const productosData = await fetchAndSetData(
-        "/api/productos.json",
+        "/api/products.json",
         setProductos,
       );
       if (!productosData) throw new Error("Failed to fetch productos");
@@ -64,7 +64,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   };
   const getUnidades = async () => {
     try {
-      const unidadesData = await fetchAndSetData("/api/unidades.json", setUnidades);
+      const unidadesData = await fetchAndSetData("/api/units.json", setUnidades);
       if (!unidadesData) throw new Error("Failed to fetch unidades");
       return unidadesData;
     } catch (error) {
@@ -83,7 +83,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const getCategorias = async () => {
     try {
       const categoriasData = await fetchAndSetData(
-        "/api/categorias.json",
+        "/api/categories.json",
         setCategorias,
       );
       if (!categoriasData) throw new Error("Failed to fetch categorias");
@@ -95,7 +95,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const getSubcategorias = async () => {
     try {
       const subcategoriasData = await fetchAndSetData(
-        "/api/subcategorias.json",
+        "/api/subcategories.json",
         setSubcategorias,
       );
       if (!subcategoriasData) throw new Error("Failed to fetch subcategorias");
@@ -136,7 +136,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
             (s) => s.id === producto.id_subcategory,
           );
           const category = subcategory
-            ? categoriasData?.find((c) => c.id === subcategory.id_categoria)
+            ? categoriasData?.find((c) => c.id === subcategory.id_category)
             : undefined;
           const family = category
             ? familiasData?.find((f) => f.id === category.id_family)
@@ -153,7 +153,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
                   : `✗ (id_subcategory: ${producto.id_subcategory} no encontrado)`,
                 category: category
                   ? "✓"
-                  : `✗ (id_categoria: ${subcategory?.id_categoria} no encontrado)`,
+                  : `✗ (id_category: ${subcategory?.id_category} no encontrado)`,
                 family: family
                   ? "✓"
                   : `✗ (id_family: ${category?.id_family} no encontrado)`,

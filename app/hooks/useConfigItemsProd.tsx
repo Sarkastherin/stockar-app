@@ -63,7 +63,7 @@ export const useConfigItemsProd = () => {
   const getSubcategoriasFiltradasOptions = useCallback(
     (categoriaId: string) =>
       subcategorias
-        ?.filter((sub) => sub.id_categoria === categoriaId)
+        ?.filter((sub) => sub.id_category === categoriaId)
         .map((sub) => ({
           value: sub.id,
           label: sub.name,
@@ -89,7 +89,7 @@ export const useConfigItemsProd = () => {
   /* const subcategoriasFiltradasOptions = useMemo(
     () =>
       subcategorias
-        ?.filter((sub) => sub.id_categoria === categoriaId)
+        ?.filter((sub) => sub.id_category === categoriaId)
         .map((sub) => ({
           value: sub.id,
           label: sub.name,

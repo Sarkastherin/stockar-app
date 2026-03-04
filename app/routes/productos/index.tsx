@@ -3,7 +3,7 @@ import Table from "~/components/Table";
 import type { ProductoConDetalles } from "~/types/productos";
 import type { TableColumn } from "react-data-table-component";
 import { useDataContext } from "~/context/DataContext";
-import { use, useEffect } from "react";
+import { useEffect } from "react";
 import { Spinner } from "flowbite-react";
 import { SubTitles } from "~/components/SubTitles";
 import { AiOutlineProduct } from "react-icons/ai";
@@ -36,7 +36,7 @@ export default function Productos() {
   const { productosConDetalles, getProductosConDetalles } = useDataContext();
   useEffect(() => {
     if (!productosConDetalles) getProductosConDetalles();
-  }, []);
+  }, [productosConDetalles, getProductosConDetalles]);
   function handleRowClick(row: ProductoConDetalles) {
     // Crear un nuevo formulario para este producto
     const newForm = form;
@@ -57,7 +57,7 @@ export default function Productos() {
       id_subcategory: "",
       name_family: "",
       name_category: "",
-      name_unit: "", 
+      name_unit: "",
       created_at: "",
       updated_at: "",
       id: "",
@@ -93,7 +93,11 @@ export default function Productos() {
         columns={columns}
         data={productosConDetalles}
         onRowClick={handleRowClick}
-        btnOnClick={{ title: "Nuevo producto", onClick: handleNewProduct, color: "indigo" }}
+        btnOnClick={{
+          title: "Nuevo producto",
+          onClick: handleNewProduct,
+          color: "indigo",
+        }}
       />
     </div>
   );

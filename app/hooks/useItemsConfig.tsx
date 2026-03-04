@@ -80,7 +80,7 @@ export default function useItemsConfig() {
     () =>
       (subcategorias ?? []).map((subcat) => {
         const category = (categorias ?? []).find(
-          (cat) => cat.id === subcat.id_categoria,
+          (cat) => cat.id === subcat.id_category,
         );
         const family = (familias ?? []).find(
           (fam) => fam.id === category?.id_family,
@@ -160,14 +160,14 @@ export default function useItemsConfig() {
           options: familiasOptions,
           required: false,
           onChange: (value) => {
-            form.setValue("id_categoria", "", {
+            form.setValue("id_category", "", {
               shouldDirty: true,
               shouldValidate: true,
             });
           },
         },
         {
-          key: "id_categoria",
+          key: "id_category",
           label: "Categoría",
           type: "select",
           options: categoriasOptions,
