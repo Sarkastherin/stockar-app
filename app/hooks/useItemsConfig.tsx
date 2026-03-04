@@ -1,12 +1,11 @@
-import { useCallback, useEffect, useMemo } from "react";
-import { useDataContext } from "~/context/DataContext";
+import { useCallback, useMemo, useState } from "react";
 import type { TableColumn } from "react-data-table-component";
 import type { TabsTypes } from "~/routes/configuraciones/productos";
 import { useModal } from "~/context/ModalContext";
 import { ItemConfigModal } from "~/components/modals/customs/ItemConfigModal";
 import { useItemConfigForm } from "./useItemConfigForm";
 import type { FilterField } from "~/components/Table";
-
+import { useConfigItemsProd } from "./useConfigItemsProd";
 type ItemConfig<T = any> = {
   tab: TabsTypes;
   name: string;
@@ -19,6 +18,7 @@ type ItemConfig<T = any> = {
 
 export type FieldsForm = FilterField & {
   required?: boolean;
+  onChange?: (value: any) => void;
 };
 
 const TAB_ORDER: TabsTypes[] = [
@@ -51,45 +51,25 @@ const createDateColumn = (
 });
 
 const toFilterFields = (fields: FieldsForm[]): FilterField[] =>
-  fields.map(({ required, ...field }) => field);
+  fields.map(({ required, onChange, ...field }) => field);
 
 export default function useItemsConfig() {
+  const {
+    subcategorias,
+    categorias,
+    familias,
+    unidades,
+    familiasOptions,
+    categoriasOptions,
+  } = useConfigItemsProd();
   const { openModal } = useModal();
   const { form, onSubmit } = useItemConfigForm();
-  const {
-    getFamilias,
-    getCategorias,
-    getSubcategorias,
-    getUnidades,
-    familias,
-    categorias,
-    subcategorias,
-    unidades,
-  } = useDataContext();
-
-  useEffect(() => {
-    if (!familias) getFamilias();
-    if (!categorias) getCategorias();
-    if (!subcategorias) getSubcategorias();
-    if (!unidades) getUnidades();
-  }, []);
-
-  const familiasOptions = useMemo(
-    () => (familias ?? []).map((fam) => ({ value: fam.id, label: fam.name })),
-    [familias],
-  );
-
-  const categoriasOptions = useMemo(
-    () =>
-      (categorias ?? []).map((cat) => ({ value: cat.id, label: cat.name })),
-    [categorias],
-  );
 
   const categoriasConFamilia = useMemo(
     () =>
       (categorias ?? []).map((cat) => ({
         ...cat,
-        familia:
+        name_family:
           (familias ?? []).find((fam) => fam.id === cat.id_family)?.name ??
           "Sin familia",
       })),
@@ -99,18 +79,18 @@ export default function useItemsConfig() {
   const subCategoriasConDetalles = useMemo(
     () =>
       (subcategorias ?? []).map((subcat) => {
-        const categoria = (categorias ?? []).find(
+        const category = (categorias ?? []).find(
           (cat) => cat.id === subcat.id_categoria,
         );
-        const familia = (familias ?? []).find(
-          (fam) => fam.id === categoria?.id_family,
+        const family = (familias ?? []).find(
+          (fam) => fam.id === category?.id_family,
         );
 
         return {
           ...subcat,
-          categoria: categoria?.name ?? "Sin categoría",
-          familia: familia?.name ?? "Sin familia",
-          id_family: familia?.id ?? "",
+          name_category: category?.name ?? "Sin categoría",
+          name_family: family?.name ?? "Sin familia",
+          id_family: family?.id ?? "",
         };
       }),
     [subcategorias, categorias, familias],
@@ -153,7 +133,12 @@ export default function useItemsConfig() {
   const fieldsByTab = useMemo<Record<TabsTypes, FieldsForm[]>>(
     () => ({
       familias: [
-        { key: "name", label: "Nombre", type: "text", required: true },
+        {
+          key: "name",
+          label: "Nombre",
+          type: "text",
+          required: true,
+        },
       ],
       categorias: [
         { key: "name", label: "Nombre", type: "text", required: true },
@@ -165,21 +150,35 @@ export default function useItemsConfig() {
           required: true,
         },
       ],
+      ///////////////////////////////////////////////
       subcategorias: [
         { key: "name", label: "Nombre", type: "text", required: true },
-        {
-          key: "id_categoria",
-          label: "Categoría",
-          type: "select",
-          options: categoriasOptions,
-          required: true,
-        },
         {
           key: "id_family",
           label: "Familia",
           type: "select",
           options: familiasOptions,
           required: false,
+          onChange: (value) => {
+            form.setValue("id_categoria", "", {
+              shouldDirty: true,
+              shouldValidate: true,
+            });
+          },
+        },
+        {
+          key: "id_categoria",
+          label: "Categoría",
+          type: "select",
+          options: categoriasOptions,
+          required: true,
+          onChange: (value) => {
+            const id_family = categorias?.find((cat) => cat.id === value)?.id_family;
+            form.setValue("id_family", id_family || "", {
+              shouldDirty: true,
+              shouldValidate: true,
+            });
+          },
         },
       ],
       unidades: [
@@ -192,7 +191,7 @@ export default function useItemsConfig() {
         },
       ],
     }),
-    [familiasOptions, categoriasOptions],
+    [familiasOptions, categoriasOptions, categorias],
   );
 
   const columnsByTab = useMemo<Record<TabsTypes, TableColumn<any>[]>>(
@@ -205,7 +204,11 @@ export default function useItemsConfig() {
       categorias: [
         createDateColumn("Fecha de creación", "created_at"),
         { name: "Nombre", selector: (row: any) => row.name, sortable: true },
-        { name: "Familia", selector: (row: any) => row.familia, sortable: true },
+        {
+          name: "Familia",
+          selector: (row: any) => row.name_family,
+          sortable: true,
+        },
         createDateColumn("Última actualización", "updated_at"),
       ],
       subcategorias: [
@@ -213,10 +216,14 @@ export default function useItemsConfig() {
         { name: "Nombre", selector: (row: any) => row.name, sortable: true },
         {
           name: "Categoría",
-          selector: (row: any) => row.categoria,
+          selector: (row: any) => row.name_category,
           sortable: true,
         },
-        { name: "Familia", selector: (row: any) => row.familia, sortable: true },
+        {
+          name: "Familia",
+          selector: (row: any) => row.name_family,
+          sortable: true,
+        },
         createDateColumn("Última actualización", "updated_at"),
       ],
       unidades: [

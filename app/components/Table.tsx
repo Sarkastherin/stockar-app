@@ -102,7 +102,7 @@ export type FilterField = {
   key: string;
   label: string;
   type?: "text" | "select" | "dateRange";
-  options?: { value: string; label: string }[];
+  options?: { value: string; label: string; disabled?: boolean }[];
   manualFilter?: boolean; // Si es true, requiere clic en botón Filtrar. Por defecto filtra automáticamente
 };
 

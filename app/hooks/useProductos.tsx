@@ -5,9 +5,11 @@ export const useProductos = () => {
     defaultValues: {},
   });
   const onSubmit = async (data: ProductoConDetalles) => {
-    const { unit, subcategory, category, family, id, ...rest } = data;
+    const {
+      id, name, id_subcategory, id_unit
+    } = data;
     const mode = id === "" ? "create" : "edit";
-    console.log("Datos a enviar:", { id, ...rest });
+    console.log("Datos a enviar:", { id, name, id_subcategory, id_unit });
   };
   return {
     form,

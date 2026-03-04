@@ -34,7 +34,7 @@ export const Select = ({
 }: SelectHTMLAttributes<HTMLSelectElement> & {
   error?: string;
   label: string;
-  options: { value: string; label: string }[];
+  options: { value: string; label: string; disabled?: boolean }[];
   emptyOption?: string;
 }) => {
   return (
@@ -45,7 +45,7 @@ export const Select = ({
       <FlowbiteSelect {...props} color={error ? "failure" : "gray"}>
         <option value="">{emptyOption}</option>
         {options.map((option) => (
-          <option key={option.value} value={option.value}>
+          <option key={option.value} value={option.value} disabled={option.disabled} hidden={option.disabled}>
             {option.label}
           </option>
         ))}

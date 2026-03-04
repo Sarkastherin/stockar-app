@@ -21,7 +21,6 @@ export default function ProductosSettings() {
   const [activeTab, setActiveTab] = useState<TabsTypes>("familias");
   const itemsConfig = getItemsConfig();
   const activeItem = itemsConfig.find((item) => item.tab === activeTab);
-
   return (
     <div className="flex" style={{ height: "calc(100vh - 128px)" }}>
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />

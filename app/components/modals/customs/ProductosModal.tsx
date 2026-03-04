@@ -5,6 +5,7 @@ import { Spinner } from "flowbite-react";
 import { useFormState, type UseFormReturn } from "react-hook-form";
 import { useDataContext } from "~/context/DataContext";
 import { useCallback, useEffect, useMemo } from "react";
+import { useConfigItemsProd } from "~/hooks/useConfigItemsProd";
 
 const formatDateTime = (value?: string) => {
   if (!value) return undefined;
@@ -25,102 +26,70 @@ export function ProductosModal({
     form: UseFormReturn<ProductoConDetalles>;
   };
 }) {
+  const { register, control, watch, setValue } = props.form;
+  const { errors } = useFormState({ control });
+  const familiaId = watch("id_family") || "";
+  const categoriaId = watch("id_category") || "";
+  const createdAt = watch("created_at");
+  const updatedAt = watch("updated_at");
+  const active = watch("active");
   const {
     subcategorias,
     categorias,
     familias,
     unidades,
-    getSubcategorias,
-    getCategorias,
-    getFamilias,
-    getUnidades,
-  } = useDataContext();
-
-  const loadData = useCallback(() => {
-    if (!subcategorias) getSubcategorias();
-    if (!categorias) getCategorias();
-    if (!familias) getFamilias();
-    if (!unidades) getUnidades();
-  }, [
-    subcategorias,
-    categorias,
-    familias,
-    unidades,
-    getSubcategorias,
-    getCategorias,
-    getFamilias,
-    getUnidades,
-  ]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  const { register, control, watch, setValue } = props.form;
-  const { errors } = useFormState({ control });
-  const familiaId = watch("family.id") || "";
-  const categoriaId = watch("category.id") || "";
-  const createdAt = watch("created_at");
-  const updatedAt = watch("updated_at");
-  const active = watch("active");
-
-  const familiasOptions = useMemo(
-    () =>
-      familias?.map((fam) => ({
-        value: fam.id,
-        label: fam.name,
-      })) || [],
-    [familias],
-  );
-
-  const categoriasFiltradasOptions = useMemo(
-    () =>
-      categorias
-        ?.filter((cat) => cat.id_family === familiaId)
-        .map((cat) => ({
-          value: cat.id,
-          label: cat.name,
-        })) || [],
-    [categorias, familiaId],
-  );
-
-  const subcategoriasFiltradasOptions = useMemo(
-    () =>
-      subcategorias
-        ?.filter((sub) => sub.id_categoria === categoriaId)
-        .map((sub) => ({
-          value: sub.id,
-          label: sub.name,
-        })) || [],
-    [subcategorias, categoriaId],
-  );
-
-  const unidadesOptions = useMemo(
-    () =>
-      unidades?.map((unit) => ({
-        value: unit.id,
-        label: unit.name,
-      })) || [],
-    [unidades],
-  );
+    familiasOptions,
+    unidadesOptions,
+    getCategoriasFiltradasOptions,
+    getSubcategoriasFiltradasOptions,
+  } = useConfigItemsProd();
 
   const isLoading = !subcategorias || !categorias || !familias || !unidades;
 
-  const changeFamily = useCallback((id_family: string) => {
-    const selectedFamily = familias?.find((fam) => fam.id === id_family);
-    setValue("family.id", id_family, { shouldDirty: true, shouldValidate: true });
-    setValue("family", selectedFamily as any, { shouldDirty: true, shouldValidate: true });
-    setValue("category.id", "", { shouldDirty: true, shouldValidate: true });
-    setValue("category", undefined as any, { shouldDirty: true, shouldValidate: true });
-    setValue("id_subcategory", "", { shouldDirty: true, shouldValidate: true });
-  }, [familias, setValue]);
+  const changeFamily = useCallback(
+    (id_family: string) => {
+      const selectedFamily = familias?.find((fam) => fam.id === id_family);
+      setValue("id_family", id_family, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      setValue("name_family", selectedFamily?.name || "", {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      setValue("id_category", "", { shouldDirty: true, shouldValidate: true });
+      setValue("name_category", "", {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      setValue("id_subcategory", "", {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    },
+    [familias, setValue],
+  );
 
-  const changeCategory = useCallback((id_category: string) => {
-    const selectedCategory = categorias?.find((cat) => cat.id === id_category);
-    setValue("category.id", id_category, { shouldDirty: true, shouldValidate: true });
-    setValue("category", selectedCategory as any, { shouldDirty: true, shouldValidate: true });
-    setValue("id_subcategory", "", { shouldDirty: true, shouldValidate: true });
-  }, [categorias, setValue]);
+  const changeCategory = useCallback(
+    (id_category: string) => {
+      const selectedCategory = categorias?.find(
+        (cat) => cat.id === id_category,
+      );
+      setValue("id_category", id_category, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      setValue("name_category", selectedCategory?.name || "", {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      setValue("id_subcategory", "", {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    },
+    [categorias, setValue],
+  );
 
   if (isLoading) {
     return (
@@ -143,7 +112,7 @@ export function ProductosModal({
         label="Familia"
         options={familiasOptions}
         required
-        {...register("family.id", {
+        {...register("id_family", {
           required: "La familia es obligatoria",
           onChange: (e) => {
             const id_family = e.target.value;
@@ -151,14 +120,14 @@ export function ProductosModal({
           },
         })}
         value={familiaId}
-        error={errors.family?.id?.message}
+        error={errors.id_family?.message}
       />
 
       <Select
         label="Categoria"
         disabled={!familiaId}
-        options={categoriasFiltradasOptions}
-        {...register("category.id", {
+        options={getCategoriasFiltradasOptions(familiaId)}
+        {...register("id_category", {
           required: "La categoria es obligatoria",
           onChange: (e) => {
             const id_category = e.target.value;
@@ -166,23 +135,25 @@ export function ProductosModal({
           },
         })}
         value={categoriaId}
-        error={errors.category?.id?.message}
+        error={errors.id_category?.message}
       />
       <Select
         disabled={!categoriaId}
         label="Subcategoria"
         emptyOption={`Seleccione una subcategoria${!categoriaId ? " (Seleccione una categoria primero)" : ""}`}
-        options={subcategoriasFiltradasOptions}
-        {...register("id_subcategory", {required: "La subcategoria es obligatoria"})}
+        options={getSubcategoriasFiltradasOptions(categoriaId)}
+        {...register("id_subcategory", {
+          required: "La subcategoria es obligatoria",
+        })}
         error={errors.id_subcategory?.message}
       />
       <Select
         label="Unidad"
         options={unidadesOptions}
-        {...register("id_unit", {required: "La unidad es obligatoria"})}
+        {...register("id_unit", { required: "La unidad es obligatoria" })}
         error={errors.id_unit?.message}
       />
-      
+
       {/* Sección de información de solo lectura */}
       {(createdAt || updatedAt) && (
         <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
@@ -190,18 +161,15 @@ export function ProductosModal({
             Información del registro
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <InfoField 
-              label="Fecha de creación" 
+            <InfoField
+              label="Fecha de creación"
               value={formatDateTime(createdAt)}
             />
-            <InfoField 
-              label="Última actualización" 
+            <InfoField
+              label="Última actualización"
               value={formatDateTime(updatedAt)}
             />
-            <InfoField 
-              label="Estado" 
-              value={active}
-            />
+            <InfoField label="Estado" value={active} />
           </div>
         </div>
       )}

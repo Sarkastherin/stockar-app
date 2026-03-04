@@ -20,13 +20,13 @@ const columns: TableColumn<ProductoConDetalles>[] = [
   { name: "Nombre", selector: (row) => row.name, sortable: true },
   {
     name: "Subcategoria",
-    selector: (row) => row.subcategory.name,
+    selector: (row) => row.name_subcategory,
     sortable: true,
   },
-  { name: "Categoria", selector: (row) => row.category.name, sortable: true },
+  { name: "Categoria", selector: (row) => row.name_category, sortable: true },
 
-  { name: "Familia", selector: (row) => row.family.name, sortable: true },
-  { name: "Unidad", selector: (row) => row.unit.name, sortable: true },
+  { name: "Familia", selector: (row) => row.name_family, sortable: true },
+  { name: "Unidad", selector: (row) => row.name_unit, sortable: true },
 ];
 
 export default function Productos() {
@@ -55,9 +55,9 @@ export default function Productos() {
     newForm.reset({
       name: "",
       id_subcategory: "",
-      family: { id: "", name: "" },
-      category: { id: "", name: "" },
-      unit: { id: "", name: "" }, 
+      name_family: "",
+      name_category: "",
+      name_unit: "", 
       created_at: "",
       updated_at: "",
       id: "",

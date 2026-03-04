@@ -91,7 +91,7 @@ export function ItemConfigModal({
                 .split("_")
                 .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
                 .join(" ")}
-              {...props.form.register(field.key,{required: field.required})}
+              {...props.form.register(field.key,{required: field.required, onChange: (e) => field.onChange?.(e.target.value)})}
               error={props.form.formState.errors[field.key]?.message as string}
             />
           );
@@ -104,7 +104,7 @@ export function ItemConfigModal({
                 .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
                 .join(" ")}
               options={field.options}
-              {...props.form.register(field.key,{required: field.required})}
+              {...props.form.register(field.key,{required: field.required, onChange: (e) => field.onChange?.(e.target.value)})}
               error={props.form.formState.errors[field.key]?.message as string}
             />
           );

@@ -131,32 +131,32 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     const productosConDetallesData: ProductoConDetalles[] =
       productosData
         .map((producto) => {
-          const unidad = unidadesData?.find((u) => u.id === producto.id_unit);
-          const subcategoria = subcategoriasData?.find(
+          const unit = unidadesData?.find((u) => u.id === producto.id_unit);
+          const subcategory = subcategoriasData?.find(
             (s) => s.id === producto.id_subcategory,
           );
-          const categoria = subcategoria
-            ? categoriasData?.find((c) => c.id === subcategoria.id_categoria)
+          const category = subcategory
+            ? categoriasData?.find((c) => c.id === subcategory.id_categoria)
             : undefined;
-          const familia = categoria
-            ? familiasData?.find((f) => f.id === categoria.id_family)
+          const family = category
+            ? familiasData?.find((f) => f.id === category.id_family)
             : undefined;
 
           // Validación de integridad referencial
-          if (!unidad || !subcategoria || !categoria || !familia) {
+          if (!unit || !subcategory || !category || !family) {
             console.warn(
               `⚠️ Producto "${producto.name}" (ID: ${producto.id}) tiene relaciones rotas:`,
               {
-                unidad: unidad ? "✓" : `✗ (id_unit: ${producto.id_unit} no encontrado)`,
-                subcategoria: subcategoria
+                unit: unit ? "✓" : `✗ (id_unit: ${producto.id_unit} no encontrado)`,
+                subcategory: subcategory
                   ? "✓"
                   : `✗ (id_subcategory: ${producto.id_subcategory} no encontrado)`,
-                categoria: categoria
+                category: category
                   ? "✓"
-                  : `✗ (id_categoria: ${subcategoria?.id_categoria} no encontrado)`,
-                familia: familia
+                  : `✗ (id_categoria: ${subcategory?.id_categoria} no encontrado)`,
+                family: family
                   ? "✓"
-                  : `✗ (id_family: ${categoria?.id_family} no encontrado)`,
+                  : `✗ (id_family: ${category?.id_family} no encontrado)`,
               },
             );
             return null;
@@ -164,10 +164,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
 
           return {
             ...producto,
-            unit: unidad,
-            subcategory: subcategoria,
-            category: categoria,
-            family: familia,
+            name_unit: unit.name,
+            name_subcategory: subcategory.name,
+            name_category: category.name,
+            name_family: family.name,
+            id_category: category.id,
+            id_family: family.id,
           };
         })
         .filter((p) => p !== null) as ProductoConDetalles[];
