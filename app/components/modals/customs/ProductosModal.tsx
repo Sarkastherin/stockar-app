@@ -16,12 +16,6 @@ export function ProductosModal({
   };
 }) {
   const [loading, setLoading] = useState(true);
-  const [familiaId, setFamiliaId] = useState<string | null>(
-    props.form.watch("family.id") || null,
-  );
-  const [categoriaId, setCategoriaId] = useState<string | null>(
-    props.form.watch("category.id") || null,
-  );
   const {
     subcategorias,
     categorias,
@@ -42,21 +36,25 @@ export function ProductosModal({
     loadData();
     setLoading(false);
   }, []);
-  const { register, control } = props.form;
+  const { register, control, watch, setValue } = props.form;
   const { errors } = useFormState({ control });
+  const familiaId = watch("family.id") || "";
+  const categoriaId = watch("category.id") || "";
+
   const changeFamily = (id_family: string) => {
     const selectedFamily = familias?.find((fam) => fam.id === id_family);
-    props.form.setValue("family", selectedFamily || (null as any));
-    props.form.setValue("category", null as any);
-    setFamiliaId(id_family);
-    setCategoriaId(null);
+    setValue("family.id", id_family, { shouldDirty: true, shouldValidate: true });
+    setValue("family", selectedFamily as any, { shouldDirty: true, shouldValidate: true });
+    setValue("category.id", "", { shouldDirty: true, shouldValidate: true });
+    setValue("category", undefined as any, { shouldDirty: true, shouldValidate: true });
+    setValue("id_subcategory", "", { shouldDirty: true, shouldValidate: true });
   };
+
   const changeCategory = (id_category: string) => {
     const selectedCategory = categorias?.find((cat) => cat.id === id_category);
-    if (selectedCategory) {
-      props.form.setValue("category", selectedCategory || null);
-      setCategoriaId(id_category);
-    }
+    setValue("category.id", id_category, { shouldDirty: true, shouldValidate: true });
+    setValue("category", selectedCategory as any, { shouldDirty: true, shouldValidate: true });
+    setValue("id_subcategory", "", { shouldDirty: true, shouldValidate: true });
   };
   if (loading) {
     return (
@@ -91,11 +89,13 @@ export function ProductosModal({
             changeFamily(id_family);
           },
         })}
+        value={familiaId}
         error={errors.family?.id?.message}
       />
 
       <Select
         label="Categoria"
+        disabled={!familiaId}
         options={
           categorias
             ?.filter((cat) => cat.id_family === familiaId)
@@ -111,6 +111,7 @@ export function ProductosModal({
             changeCategory(id_category);
           },
         })}
+        value={categoriaId}
         error={errors.category?.id?.message}
       />
       <Select
@@ -125,7 +126,8 @@ export function ProductosModal({
               label: sub.name,
             })) || []
         }
-        {...register("id_subcategory")}
+        {...register("id_subcategory", {required: "La subcategoria es obligatoria"})}
+        error={errors.id_subcategory?.message}
       />
       <Select
         label="Unidad"
@@ -135,7 +137,8 @@ export function ProductosModal({
             label: unit.name,
           })) || []
         }
-        {...register("id_unit")}
+        {...register("id_unit", {required: "La unidad es obligatoria"})}
+        error={errors.id_unit?.message}
       />
       
       {/* Sección de información de solo lectura */}

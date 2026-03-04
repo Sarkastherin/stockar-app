@@ -5,6 +5,7 @@ import DataTable, {
 } from "react-data-table-component";
 import { useLocation } from "react-router";
 import { TextInput, Select, Label, Button, useThemeMode } from "flowbite-react";
+import { NavLink } from "react-router";
 function getNestedValue(obj: any, path: string): any {
   return path.split(".").reduce((acc, part) => acc?.[part], obj);
 }
@@ -70,15 +71,15 @@ const getCustomStyles = (isDark: boolean) => ({
       fill: isDark ? "#f9fafb" : "#374151",
       opacity: 1,
       backgroundColor: "transparent",
-      '&:hover:not(:disabled)': {
+      "&:hover:not(:disabled)": {
         backgroundColor: isDark ? "#374151" : "#f3f4f6",
         color: isDark ? "#ffffff" : "#111827",
         fill: isDark ? "#ffffff" : "#111827",
       },
-      '&:focus': {
+      "&:focus": {
         outline: "none",
       },
-      '&:disabled': {
+      "&:disabled": {
         color: isDark ? "#6b7280" : "#9ca3af",
         fill: isDark ? "#6b7280" : "#9ca3af",
         opacity: 0.8,
@@ -114,6 +115,15 @@ type TableProps<T> = {
   inactiveField?: string; // Campo para identificar elementos inactivos (ej: "activo")
   alternativeStorageKey?: string; // Clave alternativa para almacenamiento local
   disableRowClick?: boolean; // Deshabilita el click en filas y el cursor pointer
+  btnExport?: boolean;
+  btnNavigate?: {
+    route: string;
+    title: string;
+  };
+  btnOnClick?: {
+    onClick: () => void;
+    title: string;
+  };
 };
 type CurrentSort = {
   columnId: string | number | undefined;
@@ -133,6 +143,9 @@ export default function Table<T>({
   inactiveField,
   alternativeStorageKey,
   disableRowClick = false,
+  btnExport,
+  btnNavigate,
+  btnOnClick,
 }: TableProps<T>) {
   const location = useLocation();
   const { computedMode } = useThemeMode();
@@ -437,6 +450,31 @@ export default function Table<T>({
           }
         />
       </div>
+      {(btnExport || btnNavigate || btnOnClick) && (
+        <span className="fixed bottom-0 left-0 w-full">
+          <div
+            className={`flex justify-between w-full  py-5 px-8 hover:bg-gray-200 hover:dark:bg-gray-950`}
+          >
+            {btnExport && <Button color={"green"}>Exportar CSV</Button>}
+
+            {btnNavigate && (
+              <NavLink to={btnNavigate.route}>
+                <Button color={"cyan"}>{btnNavigate.title}</Button>
+              </NavLink>
+            )}
+            {btnOnClick && (
+              <Button
+                size="sm"
+                className="ms-auto"
+                color={"cyan"}
+                onClick={btnOnClick.onClick}
+              >
+                {btnOnClick.title}
+              </Button>
+            )}
+          </div>
+        </span>
+      )}
     </>
   );
 }

@@ -50,6 +50,28 @@ export default function Productos() {
       onSubmit: form.handleSubmit(onSubmit),
     });
   }
+  function handleNewProduct() {
+    const newForm = form;
+    newForm.reset({
+      name: "",
+      id_subcategory: "",
+      family: { id: "", name: "" },
+      category: { id: "", name: "" },
+      unit: { id: "", name: "" }, 
+      create_at: "",
+      update_at: "",
+      id: "",
+    } as ProductoConDetalles);
+    newForm.clearErrors();
+    openModal("form", {
+      component: ProductosModal,
+      props: {
+        form: newForm,
+        title: "Nuevo producto",
+      },
+      onSubmit: form.handleSubmit(onSubmit),
+    });
+  }
   if (!productosConDetalles) {
     return (
       <div className="flex justify-center items-center">
@@ -71,6 +93,7 @@ export default function Productos() {
         columns={columns}
         data={productosConDetalles}
         onRowClick={handleRowClick}
+        btnOnClick={{ title: "Nuevo producto", onClick: handleNewProduct }}
       />
     </div>
   );

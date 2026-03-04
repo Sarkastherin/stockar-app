@@ -5,7 +5,8 @@ export const useProductos = () => {
     defaultValues: {},
   });
   const onSubmit = async (data: ProductoConDetalles) => {
-    const {unit, subcategory, category, family, ...rest} = data
+    const {unit, subcategory, category, family, ...rest} = data;
+    console.log(rest)
   };
   return {
     form,
