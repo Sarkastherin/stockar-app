@@ -73,7 +73,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   };
   const getFamilias = async () => {
     try {
-      const familiasData = await fetchAndSetData("/api/familias.json", setFamilias);
+      const familiasData = await fetchAndSetData("/api/families.json", setFamilias);
       if (!familiasData) throw new Error("Failed to fetch familias");
       return familiasData;
     } catch (error) {
