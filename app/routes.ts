@@ -9,6 +9,9 @@ export default [
       route("usuarios", "routes/configuraciones/usuarios.tsx"),
       route("productos", "routes/configuraciones/productos.tsx"),
     ]),
+    ...prefix("movimientos", [
+      index("routes/moviminetos/index.tsx"),
+    ]),
   ]),
 
 ] satisfies RouteConfig;

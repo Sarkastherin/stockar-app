@@ -36,12 +36,13 @@ export default function ProductosSettings() {
                 </Button>
               </div>
             </div>
-            <Table
-              columns={activeItem.columns}
-              data={activeItem.data}
-              onRowClick={activeItem.onOpenDetails}
-              filterFields={activeItem.filterFields}
-            />
+              <Table
+                columns={activeItem.columns}
+                data={activeItem.data}
+                onRowClick={activeItem.onOpenDetails}
+                filterFields={activeItem.filterFields}
+                scrollHeightOffset={378}
+              />
           </div>
         )}
       </div>

@@ -1,4 +1,14 @@
 import { Label } from "flowbite-react";
+export const formatDateTime = (value?: string) => {
+  if (!value) return undefined;
+  return new Date(value).toLocaleString("es-ES", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 export const InfoField = ({
   label,
@@ -7,10 +17,13 @@ export const InfoField = ({
   label: string;
   value: string | boolean | undefined;
 }) => {
-  const displayValue = typeof value === "boolean" 
-    ? (value ? "Activo" : "Inactivo")
-    : value || "N/A";
-    
+  const displayValue =
+    typeof value === "boolean"
+      ? value
+        ? "Activo"
+        : "Inactivo"
+      : value || "N/A";
+
   return (
     <div className="w-full">
       <div className="mb-1 block">

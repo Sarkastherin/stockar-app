@@ -11,7 +11,9 @@ import { Logo } from "./Logo";
 const menuItems = [
   { name: "Inicio", to: "/" },
   { name: "Productos", to: "/productos" },
+  { name: "Movimientos", to: "/movimientos" },
   { name: "Configuraciones", to: "/configuraciones" },
+  
   // Agrega más enlaces aquí según sea necesario
 ];
 const NavLinkComponent = ({ children, to }: { children: React.ReactNode; to: string }) => (

@@ -1,0 +1,47 @@
+[
+  {
+    "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    "active": true,
+    "created_at": "2026-03-01T09:00:00.000Z",
+    "updated_at": "2026-03-01T09:00:00.000Z",
+    "name": "Admin",
+    "email": "admin@stockar.local",
+    "role": "ADMIN"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "active": true,
+    "created_at": "2026-03-01T09:05:00.000Z",
+    "updated_at": "2026-03-01T09:05:00.000Z",
+    "name": "Supervisor",
+    "email": "supervisor@stockar.local",
+    "role": "SUPERVISOR"
+  },
+  {
+    "id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+    "active": true,
+    "created_at": "2026-03-01T09:10:00.000Z",
+    "updated_at": "2026-03-01T09:10:00.000Z",
+    "name": "Operador 1",
+    "email": "op1@stockar.local",
+    "role": "OPERATOR"
+  },
+  {
+    "id": "7f9e6b5c-1234-5678-9abc-def012345678",
+    "active": true,
+    "created_at": "2026-03-01T09:10:00.000Z",
+    "updated_at": "2026-03-01T09:10:00.000Z",
+    "name": "Operador 2",
+    "email": "op2@stockar.local",
+    "role": "OPERATOR"
+  },
+  {
+    "id": "8a7f6b5c-1234-5678-9abc-def012345679",
+    "active": true,
+    "created_at": "2026-03-01T09:10:00.000Z",
+    "updated_at": "2026-03-01T09:10:00.000Z",
+    "name": "Operador 3",
+    "email": "op3@stockar.local",
+    "role": "OPERATOR"
+  }
+]

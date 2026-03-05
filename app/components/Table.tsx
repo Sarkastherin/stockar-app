@@ -126,6 +126,7 @@ type TableProps<T> = {
     title: string;
     color?: "default" | "primary" | "success" | "cyan" | "indigo";
   };
+  scrollHeightOffset?: number; // Offset para calcular la altura del scroll (ej: altura de header, footer, etc.)
 };
 type CurrentSort = {
   columnId: string | number | undefined;
@@ -148,6 +149,7 @@ export default function Table<T>({
   btnExport,
   btnNavigate,
   btnOnClick,
+  scrollHeightOffset,
 }: TableProps<T>) {
   const location = useLocation();
   const { computedMode } = useThemeMode();
@@ -394,10 +396,12 @@ export default function Table<T>({
                       onChange={(e) =>
                         handleChange(key, e.target.value, manualFilter)
                       }
-                      options={options?.map((op) => ({
-                        value: op.value,
-                        label: op.label,
-                      })) || []}
+                      options={
+                        options?.map((op) => ({
+                          value: op.value,
+                          label: op.label,
+                        })) || []
+                      }
                     />
                   </>
                 ) : (
@@ -438,6 +442,10 @@ export default function Table<T>({
           onSort={handleSortChange}
           defaultSortFieldId={currentSort.columnId}
           defaultSortAsc={currentSort.direction === "asc"}
+          fixedHeader
+          {...(scrollHeightOffset && {
+            fixedHeaderScrollHeight: `calc(100vh - ${scrollHeightOffset}px)`,
+          })}
           noDataComponent={
             noDataComponent || (
               <div className="py-6 text-gray-500 dark:text-gray-400">

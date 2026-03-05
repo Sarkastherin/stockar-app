@@ -98,6 +98,7 @@ export default function Productos() {
           onClick: handleNewProduct,
           color: "indigo",
         }}
+        scrollHeightOffset={300}
       />
     </div>
   );
