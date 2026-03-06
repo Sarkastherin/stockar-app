@@ -9,7 +9,12 @@ import { LuArrowUpDown } from "react-icons/lu";
 import { useModal } from "~/context/ModalContext";
 import { MovimientoModal } from "~/components/modals/customs/ShowMovimientoModal";
 import { useMovimientos } from "~/hooks/useMovimientos";
-import type { MovimientoConDetalles } from "~/types/movimientos";
+import {
+  tiposMovimiento,
+  type MovimientoConDetalles,
+} from "~/types/movimientos";
+import { NewMovimientoModal } from "~/components/modals/customs/NewMovimientoModal";
+import { commonProps } from "~/types/commonsTypes";
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "Movimientos" },
@@ -30,8 +35,13 @@ const columns: TableColumn<MovimientoConDetalles>[] = [
     sortable: true,
   },
   { name: "Nombre", selector: (row) => row.name_product, sortable: true },
-  { name: "Tipo", selector: (row) => row.type, sortable: true },
-  { name: "Cantidad", selector: (row) => row.qty.toString(), sortable: true },
+  { name: "Tipo", selector: (row) => tiposMovimiento.find((tipo) => tipo.value === row.type)?.label || "-", sortable: true },
+  {
+    name: "Cantidad",
+    selector: (row) => row.qty,
+    sortable: true,
+    width: "120px",
+  },
   { name: "Nota", selector: (row) => row.note || "-", sortable: false },
   {
     name: "Referencia",
@@ -49,7 +59,7 @@ const columns: TableColumn<MovimientoConDetalles>[] = [
 export default function Movimientos() {
   const { openModal } = useModal();
 
-  const { form, onSubmitEdit } = useMovimientos();
+  const { form, onSubmitEdit, onSubmitNew, onError } = useMovimientos();
   const { movimientosConDetalles, getMovimientosConDetalles } =
     useDataContext();
   useEffect(() => {
@@ -69,6 +79,29 @@ export default function Movimientos() {
     });
   }
   function handleNewMovement() {
+    const newForm = form;
+    newForm.reset({
+      ...commonProps,
+      active: true,
+      type: "",
+      id_product: "",
+      qty: 0,
+      note: "",
+      reference: "",
+      name_product: "",
+      voided_at: "",
+      voided_by: "",
+      void_reason: "",
+    });
+    openModal("form", {
+      component: NewMovimientoModal,
+      props: {
+        form: newForm,
+        title: "Nuevo movimiento",
+      },
+      onSubmit: form.handleSubmit(onSubmitNew, onError),
+    });
+
     // Crear un nuevo formulario vacío para un nuevo movimiento
   }
   if (!movimientosConDetalles) {

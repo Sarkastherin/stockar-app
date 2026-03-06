@@ -61,7 +61,10 @@ export default function Productos() {
       created_at: "",
       updated_at: "",
       id: "",
-    } as ProductoConDetalles);
+      active: true,
+      created_by: "",
+      updated_by: "",
+    });
     newForm.clearErrors();
     openModal("form", {
       component: ProductosModal,

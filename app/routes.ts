@@ -11,6 +11,7 @@ export default [
     ]),
     ...prefix("movimientos", [
       index("routes/moviminetos/index.tsx"),
+      route("nuevo", "routes/moviminetos/nuevo.tsx"),
     ]),
   ]),
 

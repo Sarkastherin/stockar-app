@@ -21,7 +21,7 @@ export const tiposMovimiento: { value: MovimientoType; label: string, type: stri
     type: "warning",
   },
 ];
-export type MovimientoType = "ENTRY" | "EXIT" | "ADJUST_POS" | "ADJUST_NEG";
+export type MovimientoType = "ENTRY" | "EXIT" | "ADJUST_POS" | "ADJUST_NEG" | "";
 
 export type MovimientoDB = CommonPropsDB & {
   type: MovimientoType;

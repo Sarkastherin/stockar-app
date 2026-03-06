@@ -17,6 +17,8 @@ type DataContextType = {
   categorias: CategoriaDB[] | null;
   familias: FamiliaDB[] | null;
   unidades: UnidadesDB[] | null;
+  productos: ProductoDB[] | null;
+  getProductos: () => Promise<void>;
   getSubcategorias: () => Promise<void>;
   getCategorias: () => Promise<void>;
   getFamilias: () => Promise<void>;
@@ -278,9 +280,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         familias,
         unidades,
         usuarios,
+        productos,
         getSubcategorias,
         getCategorias,
         getFamilias,
+        getProductos,
         productosConDetalles,
         getProductosConDetalles,
         getUnidades,
