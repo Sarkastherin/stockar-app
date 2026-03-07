@@ -58,6 +58,26 @@ const getCustomStyles = (isDark: boolean) => ({
       paddingBottom: "12px",
     },
   },
+  expanderCell: {
+    style: {
+      color: isDark ? "#d1d5db" : "#4b5563",
+    },
+  },
+  expanderButton: {
+    style: {
+      color: isDark ? "#f9fafb" : "#374151",
+      fill: isDark ? "#f9fafb" : "#374151",
+      borderRadius: "6px",
+      "&:hover": {
+        backgroundColor: isDark ? "#374151" : "#f3f4f6",
+        color: isDark ? "#ffffff" : "#111827",
+        fill: isDark ? "#ffffff" : "#111827",
+      },
+      "&:focus": {
+        outline: "none",
+      },
+    },
+  },
   pagination: {
     style: {
       backgroundColor: isDark ? "#111827" : "#ffffff",
@@ -116,6 +136,8 @@ type TableProps<T> = {
   inactiveField?: string; // Campo para identificar elementos inactivos (ej: "activo")
   alternativeStorageKey?: string; // Clave alternativa para almacenamiento local
   disableRowClick?: boolean; // Deshabilita el click en filas y el cursor pointer
+  expandableRows?: boolean;
+  ExpandedComponent?: React.ComponentType<{ data: T }>;
   btnExport?: boolean;
   btnNavigate?: {
     route: string;
@@ -150,6 +172,8 @@ export default function Table<T>({
   btnNavigate,
   btnOnClick,
   scrollHeightOffset,
+  expandableRows = false,
+  ExpandedComponent,
 }: TableProps<T>) {
   const location = useLocation();
   const { computedMode } = useThemeMode();
@@ -442,6 +466,8 @@ export default function Table<T>({
           onSort={handleSortChange}
           defaultSortFieldId={currentSort.columnId}
           defaultSortAsc={currentSort.direction === "asc"}
+          expandableRows={expandableRows}
+          expandableRowsComponent={ExpandedComponent}
           fixedHeader
           {...(scrollHeightOffset && {
             fixedHeaderScrollHeight: `calc(100vh - ${scrollHeightOffset}px)`,

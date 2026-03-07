@@ -13,6 +13,7 @@ export default [
       index("routes/moviminetos/index.tsx"),
       route("nuevo", "routes/moviminetos/nuevo.tsx"),
     ]),
+    route("stock", "routes/stock/index.tsx")
   ]),
 
 ] satisfies RouteConfig;

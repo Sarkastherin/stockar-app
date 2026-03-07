@@ -50,6 +50,18 @@ export const useConfigItemsProd = () => {
       })) || [],
     [unidades],
   );
+  const categoriasOptions = useMemo(
+    () => (categorias ?? []).map((cat) => ({ value: cat.id, label: cat.name, id_family: cat.id_family })),
+    [categorias],
+  );
+  const subcategoriaOptions = useMemo(
+    () =>
+      subcategorias?.map((sub) => ({
+        value: sub.id,
+        label: sub.name,
+      })) || [],
+    [subcategorias],
+  );
   const getCategoriasFiltradasOptions = useCallback(
     (familiaId: string) =>
       categorias
@@ -70,10 +82,7 @@ export const useConfigItemsProd = () => {
         })) || [],
     [subcategorias],
   );
-  const categoriasOptions = useMemo(
-    () => (categorias ?? []).map((cat) => ({ value: cat.id, label: cat.name, id_family: cat.id_family })),
-    [categorias],
-  );
+  
   // Opciones filtradas por familia y categoría
   /* const categoriasFiltradasOptions = useMemo(
     () =>
@@ -104,6 +113,7 @@ export const useConfigItemsProd = () => {
     familiasOptions,
     unidadesOptions,
     categoriasOptions,
+    subcategoriaOptions,
     getCategoriasFiltradasOptions,
     getSubcategoriasFiltradasOptions,
   };

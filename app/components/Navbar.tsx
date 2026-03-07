@@ -10,6 +10,7 @@ import { Logo } from "./Logo";
 
 const menuItems = [
   { name: "Inicio", to: "/" },
+  { name: "Stock", to: "/stock" },
   { name: "Productos", to: "/productos" },
   { name: "Movimientos", to: "/movimientos" },
   { name: "Configuraciones", to: "/configuraciones" },

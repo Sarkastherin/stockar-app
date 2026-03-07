@@ -10,7 +10,11 @@ export default function ModalManager() {
       const customProps = modal.props || {};
       const CustomComponent = customProps.component;
       if (!CustomComponent) return null;
-      return <CustomComponent open={true} props={customProps} />;
+      return (
+        <Modal open={true} title={customProps.props.title}>
+          <CustomComponent {...customProps} />
+        </Modal>
+      );
     }
     case "form": {
       const formProps = modal.props || {};

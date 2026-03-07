@@ -1,4 +1,5 @@
 import type { CommonPropsDB } from "./commonsTypes";
+import type { MovimientoConDetalles, MovimientoDB } from "./movimientos";
 
 export type UnidadesDB = CommonPropsDB & {
   name: string;
@@ -21,15 +22,14 @@ export type ProductoDB = CommonPropsDB & {
   id_unit: string;
 };
 export type ProductoConDetalles = ProductoDB & {
-  /* subcategory: SubcategoriaDB;
-  category: CategoriaDB;
-  family: FamiliaDB;
-  unit: UnidadesDB; */
   name_subcategory: string;
   name_category: string;
   name_unit: string;
   name_family: string;
   id_category: string;
   id_family: string;
-  
 };
+export type StockItem = ProductoConDetalles & {
+  stock: number;
+  movimientos: MovimientoDB[];
+}

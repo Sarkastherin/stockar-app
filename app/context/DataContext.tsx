@@ -7,12 +7,13 @@ import type {
   SubcategoriaDB,
   CategoriaDB,
   FamiliaDB,
+  StockItem
 } from "~/types/productos";
 import type { UsuarioDB } from "~/types/usuarios";
 
 type DataContextType = {
   productosConDetalles: ProductoConDetalles[] | null;
-  getProductosConDetalles: () => Promise<void>;
+  getProductosConDetalles: () => Promise<ProductoConDetalles[] | null>;
   subcategorias: SubcategoriaDB[] | null;
   categorias: CategoriaDB[] | null;
   familias: FamiliaDB[] | null;
@@ -27,6 +28,8 @@ type DataContextType = {
   getMovimientosConDetalles: () => Promise<void>;
   usuarios: UsuarioDB[] | null;
   getUsuarios: () => Promise<void>;
+  stockItems: StockItem[] | null;
+  getStockItems: () => Promise<StockItem[] | null>;
 };
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -49,6 +52,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     MovimientoConDetalles[] | null
   >(null);
   const [usuarios, setUsuarios] = useState<UsuarioDB[] | null>(null);
+
+  const [stockItems, setStockItems] = useState<StockItem[] | null>(null);
 
   const fetchAndSetData = async <T,>(
     url: string,
@@ -205,6 +210,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       .filter((p) => p !== null) as ProductoConDetalles[];
 
     setProductosConDetalles(productosConDetallesData);
+    return productosConDetallesData;
   };
   const getMovimientos = async () => {
     try {
@@ -261,17 +267,37 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error("Error fetching users:", error);
     }
   };
-  const getUserById = async (id?: string) => {
-    if (!id) return undefined;
-    let usuariosData: UsuarioDB[] | null = usuarios;
-    if (!usuariosData) {
-      usuariosData = await getUsuarios();
+  const getStockItems = async () => {
+    let productosConDetallesData: ProductoConDetalles[] | null = productosConDetalles;
+    let movimientosData: MovimientoDB[] | null = movimientos;
+    if (!productosConDetallesData) {
+      productosConDetallesData = await getProductosConDetalles();
     }
-    if (!usuariosData) {
-      throw new Error("Failed to fetch users");
+    if (!movimientosData) {
+      movimientosData = await getMovimientos();
     }
-    return usuariosData.find((user) => user.id === id);
-  }
+    if (!productosConDetallesData || !movimientosData) {
+      throw new Error("Failed to fetch all necessary data for stock items");
+    }
+    const stockItemsData: StockItem[] = productosConDetallesData.map((producto) => {
+      const movimientosProducto = movimientosData!.filter(
+        (m) => m.id_product === producto.id,
+      );
+      const stock = movimientosProducto.reduce((acc, movimiento) => {
+        return (movimiento.type === "ENTRY" || movimiento.type === "ADJUST_POS")
+          ? acc + movimiento.qty
+          : acc - movimiento.qty;
+      }, 0);
+      return {
+        ...producto,
+        stock,
+        movimientos: movimientosProducto,
+      };
+    });
+    setStockItems(stockItemsData);
+    return stockItemsData;
+   
+  };
   return (
     <DataContext.Provider
       value={{
@@ -281,6 +307,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         unidades,
         usuarios,
         productos,
+        stockItems,
         getSubcategorias,
         getCategorias,
         getFamilias,
@@ -291,6 +318,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         movimientosConDetalles,
         getMovimientosConDetalles,
         getUsuarios,
+        getStockItems,
       }}
     >
       {children}
