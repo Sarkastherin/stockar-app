@@ -1,0 +1,11 @@
+import { createCrud } from "./crudFactory";
+import type { ProductoDB, UnidadesDB, FamiliaDB, CategoriaDB, SubcategoriaDB } from "~/types/productos";
+import type { MovimientoDB } from "~/types/movimientos";
+import type { UsuarioDB } from "~/types/usuarios";
+export const productsServices = createCrud<ProductoDB>("products");
+export const unitsServices = createCrud<UnidadesDB>("units");
+export const familiesServices = createCrud<FamiliaDB>("families");
+export const categoriesServices = createCrud<CategoriaDB>("categories");
+export const subcategoriesServices = createCrud<SubcategoriaDB>("subcategories");
+export const movementsServices = createCrud<MovimientoDB>("movements");
+export const userServices = createCrud<UsuarioDB>("users");

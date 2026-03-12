@@ -62,6 +62,7 @@ export function AjusteStockModal({
 
     form.setValue("qty", Math.abs(diferencia));
     form.setValue("type", diferencia > 0 ? "ADJUST_POS" : "ADJUST_NEG");
+    form.setValue("note", "Ajuste desde STOCK");
     setShowResumen(true);
   };
 
@@ -96,7 +97,9 @@ export function AjusteStockModal({
             {qtyAjuste === 0 ? (
               <Badge color="gray">Sin cambios</Badge>
             ) : (
-              <Badge color={movementType === "ADJUST_POS" ? "success" : "warning"}>
+              <Badge
+                color={movementType === "ADJUST_POS" ? "success" : "warning"}
+              >
                 {movimientoLabel}
               </Badge>
             )}
@@ -104,7 +107,10 @@ export function AjusteStockModal({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <InfoField label="Tipo de movimiento" value={movimientoLabel} />
-            <InfoField label="Cantidad a ajustar" value={String(form.watch("qty") ?? 0)} />
+            <InfoField
+              label="Cantidad a ajustar"
+              value={String(form.watch("qty") ?? 0)}
+            />
           </div>
         </div>
       )}

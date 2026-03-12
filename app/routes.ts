@@ -10,8 +10,8 @@ export default [
       route("productos", "routes/configuraciones/productos.tsx"),
     ]),
     ...prefix("movimientos", [
-      index("routes/moviminetos/index.tsx"),
-      route("nuevo", "routes/moviminetos/nuevo.tsx"),
+      index("routes/movimientos/index.tsx"),
+      route("nuevo", "routes/movimientos/nuevo.tsx"),
     ]),
     route("stock", "routes/stock/index.tsx")
   ]),

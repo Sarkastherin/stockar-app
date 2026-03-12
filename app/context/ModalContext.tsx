@@ -11,11 +11,16 @@ type ModalState = {
   type: ModalType | null;
   props?: any;
 }
+type StepForm = "form" | "success" | "error";
 
 interface ModalContextType {
   modal: ModalState;
   openModal: (type: ModalType, props?: any) => void;
   closeModal: () => void;
+  messageForm: string | null;
+  setMessageForm: (message: string | null) => void;
+  stepForm: StepForm;
+  setStepForm: (step: StepForm) => void;
 }
 const ModalContext = createContext<ModalContextType | undefined>(undefined);
 
@@ -23,11 +28,15 @@ export const ModalProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [modal, setModal] = useState<ModalState>({ type: null });
+  const [messageForm, setMessageForm] = useState<string | null>(null);
+  const [stepForm, setStepForm] = useState<StepForm>("form");
   const openModal = (type: ModalType, props?: any) => {
     setModal({ type, props });
   };
   const closeModal = () => {
     setModal({ type: null });
+    setMessageForm(null);
+    setStepForm("form");
   };
   return (
     <ModalContext.Provider
@@ -35,6 +44,10 @@ export const ModalProvider: React.FC<{ children: React.ReactNode }> = ({
         openModal,
         closeModal,
         modal,
+        messageForm,
+        setMessageForm,
+        stepForm,
+        setStepForm,
       }}
     >
       {children}

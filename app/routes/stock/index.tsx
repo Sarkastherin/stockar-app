@@ -10,7 +10,7 @@ import { useModal } from "~/context/ModalContext";
 import { AjusteStockModal } from "~/components/modals/customs/AjusteStockModal";
 import { useMovimientos } from "~/hooks/useMovimientos";
 import { AiOutlineStock } from "react-icons/ai";
-import { tiposMovimiento, type MovimientoConDetalles } from "~/types/movimientos";
+import { tiposMovimiento } from "~/types/movimientos";
 import { useConfigItemsProd } from "~/hooks/useConfigItemsProd";
 import { commonProps } from "~/types/commonsTypes";
 export function meta({}: Route.MetaArgs) {
@@ -30,13 +30,24 @@ const columns: TableColumn<StockItem>[] = [
 
   { name: "Familia", selector: (row) => row.name_family, sortable: true },
   { name: "Unidad", selector: (row) => row.name_unit, sortable: true },
-  { name: "Stock", selector: (row) => row.stock.toString(), sortable: true, width: "120px", right: true},
+  {
+    name: "Stock",
+    selector: (row) => Number(row.stock).toFixed(2),
+    sortable: true,
+    width: "120px",
+    right: true,
+  },
 ];
 
 export default function Stock() {
   const { openModal } = useModal();
-const { categoriasOptions,subcategoriaOptions, familiasOptions, unidadesOptions } = useConfigItemsProd();
-  const { form, onSubmitAjuste, onError } = useMovimientos();
+  const {
+    categoriasOptions,
+    subcategoriaOptions,
+    familiasOptions,
+    unidadesOptions,
+  } = useConfigItemsProd();
+  const { form, onCreate } = useMovimientos();
   const { stockItems, getStockItems } = useDataContext();
   useEffect(() => {
     if (!stockItems) getStockItems();
@@ -60,7 +71,7 @@ const { categoriasOptions,subcategoriaOptions, familiasOptions, unidadesOptions 
         title: "Ajustar stock de: " + row.name,
         stockActual: row.stock,
       },
-      onSubmit: form.handleSubmit(onSubmitAjuste, onError),
+      onSubmit: form.handleSubmit(onCreate),
     });
   }
   const ExpandableComponent = ({ data }: { data: StockItem }) => {
@@ -103,21 +114,29 @@ const { categoriasOptions,subcategoriaOptions, familiasOptions, unidadesOptions 
                       } hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors`}
                     >
                       <td className="border-t border-gray-200 dark:border-gray-700 p-2.5 whitespace-nowrap">
-                        {new Date(movimiento.created_at).toLocaleString("es-ES", {
-                          year: "numeric",
-                          month: "2-digit",
-                          day: "2-digit",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {new Date(movimiento.created_at).toLocaleString(
+                          "es-ES",
+                          {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )}
                       </td>
                       <td className="border-t border-gray-200 dark:border-gray-700 p-2.5">
-                        <Badge color={tipo?.type || "gray"}>{tipo?.label || "-"}</Badge>
+                        <Badge color={tipo?.type || "gray"}>
+                          {tipo?.label || "-"}
+                        </Badge>
                       </td>
                       <td className="border-t border-gray-200 dark:border-gray-700 p-2.5 font-medium text-gray-700 dark:text-gray-200">
                         {movimiento.reference || "-"}
                       </td>
-                      <td className="border-t border-gray-200 dark:border-gray-700 p-2.5 max-w-xs truncate" title={movimiento.note || "-"}>
+                      <td
+                        className="border-t border-gray-200 dark:border-gray-700 p-2.5 max-w-xs truncate"
+                        title={movimiento.note || "-"}
+                      >
                         {movimiento.note || "-"}
                       </td>
                       <td className="border-t border-gray-200 dark:border-gray-700 p-2.5 text-right font-semibold text-gray-800 dark:text-gray-100">
@@ -152,18 +171,53 @@ const { categoriasOptions,subcategoriaOptions, familiasOptions, unidadesOptions 
       />
       <Table
         columns={columns}
-        data={stockItems}
+        data={stockItems.filter((item) => item.stock > 0)} // Filtrar productos sin stock calculado
         onRowClick={handleRowClick}
-        scrollHeightOffset={300}
+        scrollHeightOffset={370}
         expandableRows
         ExpandedComponent={ExpandableComponent}
         filterFields={[
-          {key: "name", label: "Producto"},
-          {key: "id_subcategory", label: "Subcategoria", type: "select", options: subcategoriaOptions},
-          {key: "id_category", label: "Categoria", type: "select", options: categoriasOptions},
-          {key: "id_family", label: "Familia", type: "select", options: familiasOptions},
-          {key: "id_unit", label: "Unidad", type: "select", options: unidadesOptions},
+          { key: "name", label: "Producto" },
+          {
+            key: "id_subcategory",
+            label: "Subcategoria",
+            type: "select",
+            options: subcategoriaOptions,
+            emptyOption: "Todas",
+          },
+          {
+            key: "id_category",
+            label: "Categoria",
+            type: "select",
+            options: categoriasOptions,
+            emptyOption: "Todas",
+          },
+          {
+            key: "id_family",
+            label: "Familia",
+            type: "select",
+            options: familiasOptions,
+            emptyOption: "Todas",
+          },
+          {
+            key: "id_unit",
+            label: "Unidad",
+            type: "select",
+            options: unidadesOptions,
+            emptyOption: "Todas",
+          },
         ]}
+        btnExport={{
+          filename: "stock",
+          headers: [
+            { label: "Nombre", key: "name", type: "text" },
+            { label: "Subcategoria", key: "name_subcategory", type: "text" },
+            { label: "Categoria", key: "name_category", type: "text" },
+            { label: "Familia", key: "name_family", type: "text" },
+            { label: "Unidad", key: "name_unit", type: "text" },
+            { label: "Stock", key: "stock", type: "number" },
+          ],
+        }}
       />
     </div>
   );

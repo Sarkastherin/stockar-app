@@ -197,6 +197,7 @@ export default function TemplateNuevoMovimiento({
               type="number"
               {...register("qty", {
                 required: "La cantidad es requerida",
+                valueAsNumber: true,
                 validate: (value) =>
                   value > 0 || "La cantidad debe ser mayor a cero",
               })}

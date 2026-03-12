@@ -15,6 +15,8 @@ export function MovimientoModal({
   props: {
     title: string;
     form: UseFormReturn<MovimientoConDetalles>;
+    onDelete?: () => void;
+    onReactivate?: () => void;
   };
 }) {
   const { getUsuarios, usuarios } = useDataContext();
@@ -28,15 +30,15 @@ export function MovimientoModal({
     (id?: string) => {
       if (!id) return undefined;
       const user = usuarios?.find((u) => u.id === id);
-      return user ? user.name : "N/A";
+      return user ? `${user.name} ${user.last_name}` : "N/A";
     },
     [usuarios],
   );
   const createdAt = watch("created_at");
   const updatedAt = watch("updated_at");
   const active = watch("active");
-  const createdBy = getUserById(watch("created_by"));
-  const updatedBy = getUserById(watch("updated_by"));
+  const createdBy = watch("creator");
+  const updatedBy = watch("updater");
   const voidedAt = watch("voided_at");
   const voidedBy = getUserById(watch("voided_by"));
   const voidReason = watch("void_reason");
@@ -108,7 +110,7 @@ export function MovimientoModal({
         </div>
       </div>
       {/* Botones de acción */}
-      {active && (
+      {active ? (
         <div className="bg-red-50 border-2 border-red-200 p-4 text-red-700 rounded-lg mt-4 hover:bg-red-100 transition-colors">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
             <div className="flex-1">
@@ -120,13 +122,40 @@ export function MovimientoModal({
                 considerado en los cálculos de stock.
               </p>
             </div>
-            <Button size="sm" color="red" className="whitespace-nowrap">
+            <Button
+              size="sm"
+              color="red"
+              className="whitespace-nowrap"
+              onClick={props.onDelete}
+            >
               Anular movimiento
             </Button>
           </div>
         </div>
+      ) : (
+        <div className="bg-green-50 border-2 border-green-200 p-4 text-green-700 rounded-lg mt-4 hover:bg-green-100 transition-colors">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-green-900 mb-1">
+                ⚠️ Reactivar movimiento
+              </p>
+              <p className="text-sm text-green-700">
+                Esta acción reactivará el movimiento seleccionado y será
+                considerado nuevamente en los cálculos de stock.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              color="green"
+              className="whitespace-nowrap"
+              onClick={props.onReactivate}
+            >
+              Reactivar movimiento
+            </Button>
+          </div>
+        </div>
       )}
-      {active !== undefined && (
+      {(createdAt || updatedAt) && (
         <InfoFormCommons
           active={active}
           createdAt={createdAt}

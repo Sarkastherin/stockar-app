@@ -4,9 +4,12 @@ import DataTable, {
   type TableColumn,
 } from "react-data-table-component";
 import { useLocation } from "react-router";
-import { Button, useThemeMode } from "flowbite-react";
+import { Button, ToggleSwitch, useThemeMode } from "flowbite-react";
 import { NavLink } from "react-router";
 import { Input, Select } from "./forms/InputsForm";
+import EmptyTableState from "./EmptyTableState";
+import { ButtonExport } from "./forms/ButtonExport";
+import type { Data } from "react-csv/lib/core";
 function getNestedValue(obj: any, path: string): any {
   return path.split(".").reduce((acc, part) => acc?.[part], obj);
 }
@@ -122,7 +125,12 @@ export type FilterField = {
   key: string;
   label: string;
   type?: "text" | "select" | "dateRange";
-  options?: { value: string; label: string; disabled?: boolean }[];
+  options?: {
+    value: string;
+    label: string;
+    disabled?: boolean;
+  }[];
+  emptyOption?: string;
   manualFilter?: boolean; // Si es true, requiere clic en botón Filtrar. Por defecto filtra automáticamente
 };
 
@@ -138,7 +146,10 @@ type TableProps<T> = {
   disableRowClick?: boolean; // Deshabilita el click en filas y el cursor pointer
   expandableRows?: boolean;
   ExpandedComponent?: React.ComponentType<{ data: T }>;
-  btnExport?: boolean;
+  btnExport?: {
+    filename: string;
+    headers: any[];
+  };
   btnNavigate?: {
     route: string;
     title: string;
@@ -147,6 +158,12 @@ type TableProps<T> = {
     onClick: () => void;
     title: string;
     color?: "default" | "primary" | "success" | "cyan" | "indigo";
+  };
+  emptyState?: {
+    title?: string;
+    description?: string;
+    actionLabel?: string;
+    onAction?: () => void;
   };
   scrollHeightOffset?: number; // Offset para calcular la altura del scroll (ej: altura de header, footer, etc.)
 };
@@ -171,10 +188,12 @@ export default function Table<T>({
   btnExport,
   btnNavigate,
   btnOnClick,
+  emptyState,
   scrollHeightOffset,
   expandableRows = false,
   ExpandedComponent,
 }: TableProps<T>) {
+  const [showInactive, setShowInactive] = useState(false);
   const location = useLocation();
   const { computedMode } = useThemeMode();
   const isDarkMode = computedMode === "dark";
@@ -267,7 +286,20 @@ export default function Table<T>({
       value === "false"
     );
   };
-
+// Función para obtener estilos condicionales de fila
+  const getInactiveRowStyles = () => {
+    return {
+      opacity: "0.6",
+      backgroundColor:
+        tableTheme === "flowbite-dark"
+          ? "rgba(107, 114, 128, 0.1)"
+          : "rgba(156, 163, 175, 0.1)",
+      borderLeft:
+        tableTheme === "flowbite-dark"
+          ? "3px solid rgb(107, 114, 128)"
+          : "3px solid rgb(156, 163, 175)",
+    };
+  };
   function removeAccents(str: string) {
     return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   }
@@ -315,7 +347,6 @@ export default function Table<T>({
     // Si NO es manual (por defecto es automático), aplicar filtro inmediatamente
     if (!manual) onFilter(updated);
   };
-
   // Función para manejar el cambio de página
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -362,9 +393,28 @@ export default function Table<T>({
         : null;
     }
   }, []);
+  // Filtrar datos activos/inactivos si existe la columna de estado y el campo active y setear filterData
+  useEffect(() => {
+    let filtered = data;
+    if (inactiveField) {
+      filtered = showInactive
+        ? filtered
+        : filtered.filter((row) => !isRowInactive(row));
+    }
+    setFilteredData(filtered);
+  }, [data, showInactive, inactiveField]);
 
   return (
     <>
+      {inactiveField && (
+        <div className="mb-4 flex items-center gap-2">
+          <ToggleSwitch
+            checked={showInactive}
+            onChange={setShowInactive}
+            label="Mostrar inactivos"
+          />
+        </div>
+      )}
       {showFilterInfo && filterFields.length > 0 && (
         <div className="flex justify-between text-sm font-semibold">
           <div className="text-blue-600 dark:text-blue-400 ">
@@ -384,7 +434,14 @@ export default function Table<T>({
           }}
         >
           {filterFields.map(
-            ({ key, label, type = "text", options, manualFilter }) => (
+            ({
+              key,
+              label,
+              type = "text",
+              options,
+              manualFilter,
+              emptyOption,
+            }) => (
               <div key={key} className="w-full">
                 {type === "dateRange" ? (
                   <div className="flex gap-2 items-center">
@@ -417,6 +474,7 @@ export default function Table<T>({
                       label={label}
                       id={key}
                       value={filters[key] ?? ""}
+                      {...(emptyOption && { emptyOption })}
                       onChange={(e) =>
                         handleChange(key, e.target.value, manualFilter)
                       }
@@ -474,19 +532,32 @@ export default function Table<T>({
           })}
           noDataComponent={
             noDataComponent || (
-              <div className="py-6 text-gray-500 dark:text-gray-400">
-                No se encontraron registros
-              </div>
+              <EmptyTableState
+                title={emptyState?.title || "No se encontraron registros"}
+                description={emptyState?.description}
+                actionLabel={emptyState?.actionLabel || btnOnClick?.title}
+                onAction={emptyState?.onAction || btnOnClick?.onClick}
+              />
             )
           }
+          conditionalRowStyles={
+          inactiveField
+            ? [
+                {
+                  when: (row: T) => isRowInactive(row),
+                  style: getInactiveRowStyles(),
+                },
+              ]
+            : undefined
+        }
         />
       </div>
       {(btnExport || btnNavigate || btnOnClick) && (
         <span className="fixed bottom-0 left-0 w-full">
           <div
-            className={`flex justify-between w-full  py-5 px-8 hover:bg-gray-200 hover:dark:bg-gray-950`}
+            className={`flex justify-between w-full  py-3 px-8 hover:bg-gray-200 hover:dark:bg-gray-950`}
           >
-            {btnExport && <Button color={"green"}>Exportar CSV</Button>}
+            {btnExport && <ButtonExport data={filteredData as Data} filename={btnExport.filename} headers={btnExport.headers}/>}
 
             {btnNavigate && (
               <NavLink to={btnNavigate.route}>

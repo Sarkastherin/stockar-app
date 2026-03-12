@@ -42,6 +42,13 @@ export default function ProductosSettings() {
                 onRowClick={activeItem.onOpenDetails}
                 filterFields={activeItem.filterFields}
                 scrollHeightOffset={378}
+                inactiveField="active"
+                emptyState={{
+                  title: `No hay ${activeItem.name.toLowerCase()} cargadas`,
+                  description: `Puedes crear la primera ${activeItem.name.slice(0, -1).toLowerCase()} para comenzar.`,
+                  actionLabel: `Crear ${activeItem.name.slice(0, -1)}`,
+                  onAction: activeItem.onOpenNew,
+                }}
               />
           </div>
         )}

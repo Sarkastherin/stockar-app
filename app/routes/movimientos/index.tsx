@@ -15,6 +15,7 @@ import {
 } from "~/types/movimientos";
 import { NewMovimientoModal } from "~/components/modals/customs/NewMovimientoModal";
 import { commonProps } from "~/types/commonsTypes";
+import { Badge } from "flowbite-react";
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "Movimientos" },
@@ -33,20 +34,41 @@ const columns: TableColumn<MovimientoConDetalles>[] = [
         minute: "2-digit",
       }),
     sortable: true,
+    width: "180px",
   },
   { name: "Nombre", selector: (row) => row.name_product, sortable: true },
-  { name: "Tipo", selector: (row) => tiposMovimiento.find((tipo) => tipo.value === row.type)?.label || "-", sortable: true },
+  {
+    name: "Tipo",
+    cell: (row) => (
+      <Badge
+        color={
+          tiposMovimiento.find((tipo) => tipo.value === row.type)?.type ||
+          "gray"
+        }
+      >
+        {tiposMovimiento.find((tipo) => tipo.value === row.type)?.label || "-"}
+      </Badge>
+    ),
+    sortable: true,
+    width: "150px",
+  },
   {
     name: "Cantidad",
     selector: (row) => row.qty,
     sortable: true,
     width: "120px",
   },
-  { name: "Nota", selector: (row) => row.note || "-", sortable: false },
+  {
+    name: "Nota",
+    selector: (row) => row.note || "-",
+    sortable: false,
+    width: "200px",
+  },
   {
     name: "Referencia",
     selector: (row) => row.reference || "-",
     sortable: false,
+    width: "200px",
   },
   {
     name: "Estado",
@@ -59,7 +81,7 @@ const columns: TableColumn<MovimientoConDetalles>[] = [
 export default function Movimientos() {
   const { openModal } = useModal();
 
-  const { form, onSubmitEdit, onSubmitNew, onError } = useMovimientos();
+  const { form, onUpdate, onCreate, onDelete, onReactivate } = useMovimientos();
   const { movimientosConDetalles, getMovimientosConDetalles } =
     useDataContext();
   useEffect(() => {
@@ -74,8 +96,10 @@ export default function Movimientos() {
       props: {
         form: newForm,
         title: "Consultar movimiento: " + row.name_product,
+        onDelete: () => onDelete(row.id),
+        onReactivate: () => onReactivate(row.id),
       },
-      onSubmit: form.handleSubmit(onSubmitEdit),
+      onSubmit: form.handleSubmit(onUpdate),
     });
   }
   function handleNewMovement() {
@@ -99,7 +123,7 @@ export default function Movimientos() {
         form: newForm,
         title: "Nuevo movimiento",
       },
-      onSubmit: form.handleSubmit(onSubmitNew, onError),
+      onSubmit: form.handleSubmit(onCreate),
     });
 
     // Crear un nuevo formulario vacío para un nuevo movimiento
@@ -125,12 +149,26 @@ export default function Movimientos() {
         columns={columns}
         data={movimientosConDetalles}
         onRowClick={handleRowClick}
+        inactiveField="active"
         btnOnClick={{
           title: "Nuevo movimiento",
           onClick: handleNewMovement,
           color: "indigo",
         }}
-        scrollHeightOffset={300}
+        scrollHeightOffset={410}
+        filterFields={[
+          { key: "name_product", label: "Producto" },
+          {
+            key: "type",
+            label: "Tipo",
+            type: "select",
+            options: tiposMovimiento.map((tipo) => ({
+              label: tipo.label,
+              value: tipo.value,
+            })),
+          },
+          { key: "created_at", label: "Fecha", type: "dateRange" },
+        ]}
       />
     </div>
   );

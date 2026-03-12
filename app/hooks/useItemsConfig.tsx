@@ -1,11 +1,13 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import type { TableColumn } from "react-data-table-component";
 import type { TabsTypes } from "~/routes/configuraciones/productos";
 import { useModal } from "~/context/ModalContext";
 import { ItemConfigModal } from "~/components/modals/customs/ItemConfigModal";
-import { useItemConfigForm } from "./useItemConfigForm";
 import type { FilterField } from "~/components/Table";
 import { useConfigItemsProd } from "./useConfigItemsProd";
+import { useDataContext } from "~/context/DataContext";
+import { useForm } from "react-hook-form";
+import { prepareUpdatePayload } from "~/utils/functions";
 type ItemConfig<T = any> = {
   tab: TabsTypes;
   name: string;
@@ -62,8 +64,143 @@ export default function useItemsConfig() {
     familiasOptions,
     categoriasOptions,
   } = useConfigItemsProd();
-  const { openModal } = useModal();
-  const { form, onSubmit } = useItemConfigForm();
+  const {
+    createFamilias,
+    updateFamilias,
+    deleteFamilias,
+    reactivateFamilias,
+    createCategorias,
+    updateCategorias,
+    deleteCategorias,
+    reactivateCategorias,
+    createSubcategorias,
+    updateSubcategorias,
+    deleteSubcategorias,
+    reactivateSubcategorias,
+    createUnidades,
+    updateUnidades,
+    deleteUnidades,
+    reactivateUnidades,
+  } = useDataContext();
+  const { openModal, setMessageForm, setStepForm } = useModal();
+  const form = useForm<any>({
+    defaultValues: {},
+  });
+
+  // Factory para crear handlers dinámicos por tipo de entidad
+  const createHandlers = useCallback(
+    (
+      createFn: (data: any) => Promise<any>,
+      updateFn: (id: string, data: any) => Promise<any>,
+      desactivateFn: (id: string) => Promise<any>,
+      reactivateFn: (id: string) => Promise<any>,
+      entityName: string,
+    ) => ({
+      onCreate: async (data: any) => {
+        const { id, created_at, updated_at, active, ...payload } = data;
+        const result = await createFn(payload);
+        if (result.error) {
+          setMessageForm(
+            result.error.message || `Error al crear ${entityName}`,
+          );
+          setStepForm("error");
+          return;
+        }
+        setMessageForm(`${entityName} creado exitosamente`);
+        setStepForm("success");
+      },
+      onUpdate: async (data: any) => {
+        const { id, created_at, updated_at, active, ...rest } = data;
+        const payload = prepareUpdatePayload({
+          dirtyFields: form.formState.dirtyFields,
+          formData: rest,
+        });
+        const result = await updateFn(id, payload);
+        if (result.error) {
+          setMessageForm(
+            result.error.message || `Error al actualizar ${entityName}`,
+          );
+          setStepForm("error");
+          return;
+        }
+        setMessageForm(`${entityName} actualizado exitosamente`);
+        setStepForm("success");
+      },
+      onDelete: async (id: string) => {
+        const result = await desactivateFn(id);
+        if (result.error) {
+          setMessageForm(
+            result.error.message || `Error al dar de baja ${entityName}`,
+          );
+          setStepForm("error");
+          return;
+        }
+        setMessageForm(`${entityName} dado de baja exitosamente`);
+        setStepForm("success");
+      },
+      onReactivate: async (id: string) => {
+        const result = await reactivateFn(id);
+        if (result.error) {
+          setMessageForm(
+            result.error.message || `Error al reactivar ${entityName}`,
+          );
+          setStepForm("error");
+          return;
+        }
+        setMessageForm(`${entityName} reactivado exitosamente`);
+        setStepForm("success");
+      },
+    }),
+    [form, setMessageForm, setStepForm],
+  );
+
+  // Handlers específicos por tipo de entidad
+  const handlersByTab = useMemo(
+    () => ({
+      familias: createHandlers(
+        createFamilias,
+        updateFamilias,
+        deleteFamilias,
+        reactivateFamilias,
+        "Familia",
+      ),
+      categorias: createHandlers(
+        createCategorias,
+        updateCategorias,
+        deleteCategorias,
+        reactivateCategorias,
+        "Categoría",
+      ),
+      subcategorias: createHandlers(
+        createSubcategorias,
+        updateSubcategorias,
+        deleteSubcategorias,
+        reactivateSubcategorias,
+
+        "Subcategoría",
+      ),
+      unidades: createHandlers(
+        createUnidades,
+        updateUnidades,
+        deleteUnidades,
+        reactivateUnidades,
+        "Unidad",
+      ),
+    }),
+    [
+      createHandlers,
+      createFamilias,
+      updateFamilias,
+      deleteFamilias,
+      reactivateFamilias,
+      createCategorias,
+      updateCategorias,
+      createSubcategorias,
+      updateSubcategorias,
+      createUnidades,
+      updateUnidades,
+    ],
+  );
 
   const categoriasConFamilia = useMemo(
     () =>
@@ -97,26 +234,30 @@ export default function useItemsConfig() {
   );
 
   const createOnOpenDetails = useCallback(
-    (fieldsForm: FieldsForm[]) => (row: any) => {
+    (fieldsForm: FieldsForm[], tab: TabsTypes) => (row: any) => {
       const newForm = form;
       newForm.reset(row);
+      const handlers = handlersByTab[tab];
       openModal("form", {
         component: ItemConfigModal,
         props: {
           form: newForm,
           title: `Editar ${row.name}`,
           fieldsForm,
+          onDelete: () => handlers.onDelete(row.id),
+          onReactivate: () => handlers.onReactivate(row.id),
         },
-        onSubmit: form.handleSubmit(onSubmit),
+        onSubmit: form.handleSubmit(handlers.onUpdate),
       });
     },
-    [form, openModal, onSubmit],
+    [form, openModal, handlersByTab],
   );
 
   const createOnOpenNew = useCallback(
-    (fieldsForm: FieldsForm[], itemName: string) => () => {
+    (fieldsForm: FieldsForm[], itemName: string, tab: TabsTypes) => () => {
       const newForm = form;
       newForm.reset({});
+      const handlers = handlersByTab[tab];
       openModal("form", {
         component: ItemConfigModal,
         props: {
@@ -124,10 +265,10 @@ export default function useItemsConfig() {
           title: `Nuevo ${itemName}`,
           fieldsForm,
         },
-        onSubmit: form.handleSubmit(onSubmit),
+        onSubmit: form.handleSubmit(handlers.onCreate),
       });
     },
-    [form, openModal, onSubmit],
+    [form, openModal, handlersByTab],
   );
 
   const fieldsByTab = useMemo<Record<TabsTypes, FieldsForm[]>>(
@@ -150,7 +291,6 @@ export default function useItemsConfig() {
           required: true,
         },
       ],
-      ///////////////////////////////////////////////
       subcategorias: [
         { key: "name", label: "Nombre", type: "text", required: true },
         {
@@ -173,7 +313,9 @@ export default function useItemsConfig() {
           options: categoriasOptions,
           required: true,
           onChange: (value) => {
-            const id_family = categorias?.find((cat) => cat.id === value)?.id_family;
+            const id_family = categorias?.find(
+              (cat) => cat.id === value,
+            )?.id_family;
             form.setValue("id_family", id_family || "", {
               shouldDirty: true,
               shouldValidate: true,
@@ -200,6 +342,7 @@ export default function useItemsConfig() {
         createDateColumn("Fecha de creación", "created_at"),
         { name: "Nombre", selector: (row: any) => row.name, sortable: true },
         createDateColumn("Última actualización", "updated_at"),
+        {name: "Estado", selector: (row: any) => (row.active ? "Activo" : "Inactivo"), sortable: true, width: "120px"},
       ],
       categorias: [
         createDateColumn("Fecha de creación", "created_at"),
@@ -210,6 +353,7 @@ export default function useItemsConfig() {
           sortable: true,
         },
         createDateColumn("Última actualización", "updated_at"),
+         {name: "Estado", selector: (row: any) => (row.active ? "Activo" : "Inactivo"), sortable: true, width: "120px"},
       ],
       subcategorias: [
         createDateColumn("Fecha de creación", "created_at"),
@@ -225,6 +369,7 @@ export default function useItemsConfig() {
           sortable: true,
         },
         createDateColumn("Última actualización", "updated_at"),
+         {name: "Estado", selector: (row: any) => (row.active ? "Activo" : "Inactivo"), sortable: true, width: "120px"},
       ],
       unidades: [
         createDateColumn("Fecha de creación", "created_at"),
@@ -235,6 +380,7 @@ export default function useItemsConfig() {
           sortable: true,
         },
         createDateColumn("Última actualización", "updated_at"),
+         {name: "Estado", selector: (row: any) => (row.active ? "Activo" : "Inactivo"), sortable: true, width: "120px"},
       ],
     }),
     [],
@@ -261,8 +407,8 @@ export default function useItemsConfig() {
         name: TAB_META[tab].name,
         columns: columnsByTab[tab],
         data: dataByTab[tab],
-        onOpenDetails: createOnOpenDetails(fields),
-        onOpenNew: createOnOpenNew(fields, TAB_META[tab].singular),
+        onOpenDetails: createOnOpenDetails(fields, tab),
+        onOpenNew: createOnOpenNew(fields, TAB_META[tab].singular, tab),
         filterFields: toFilterFields(fields),
       };
     });

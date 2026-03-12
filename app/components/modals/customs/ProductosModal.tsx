@@ -1,22 +1,11 @@
 import type { ProductoConDetalles } from "~/types/productos";
 import { Input, Select } from "~/components/forms/InputsForm";
-import { InfoField } from "~/components/forms/InfoField";
-import { Spinner } from "flowbite-react";
+import { Spinner, Button } from "flowbite-react";
 import { useFormState, type UseFormReturn } from "react-hook-form";
-import { useDataContext } from "~/context/DataContext";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback } from "react";
 import { useConfigItemsProd } from "~/hooks/useConfigItemsProd";
-
-const formatDateTime = (value?: string) => {
-  if (!value) return undefined;
-  return new Date(value).toLocaleString("es-ES", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
+import InfoFormCommons from "~/components/forms/InfoFormCommons";
+import { useModal } from "~/context/ModalContext";
 
 export function ProductosModal({
   props,
@@ -24,6 +13,8 @@ export function ProductosModal({
   props: {
     title: string;
     form: UseFormReturn<ProductoConDetalles>;
+    onDelete?: () => void;
+    onReactivate?: () => void;
   };
 }) {
   const { register, control, watch, setValue } = props.form;
@@ -32,6 +23,8 @@ export function ProductosModal({
   const categoriaId = watch("id_category") || "";
   const createdAt = watch("created_at");
   const updatedAt = watch("updated_at");
+  const createdBy = watch("creator");
+  const updatedBy = watch("updater");
   const active = watch("active");
   const {
     subcategorias,
@@ -108,69 +101,75 @@ export function ProductosModal({
         label="Nombre del producto"
         error={errors.name?.message}
       />
-      <Select
-        label="Familia"
-        options={familiasOptions}
-        required
-        {...register("id_family", {
-          required: "La familia es obligatoria",
-          onChange: (e) => {
-            const id_family = e.target.value;
-            changeFamily(id_family);
-          },
-        })}
-        value={familiaId}
-        error={errors.id_family?.message}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Select
+          label="Familia"
+          options={familiasOptions}
+          required
+          {...register("id_family", {
+            required: "La familia es obligatoria",
+            onChange: (e) => {
+              const id_family = e.target.value;
+              changeFamily(id_family);
+            },
+          })}
+          value={familiaId}
+          error={errors.id_family?.message}
+        />
 
-      <Select
-        label="Categoria"
-        disabled={!familiaId}
-        options={getCategoriasFiltradasOptions(familiaId)}
-        {...register("id_category", {
-          required: "La categoria es obligatoria",
-          onChange: (e) => {
-            const id_category = e.target.value;
-            changeCategory(id_category);
-          },
-        })}
-        value={categoriaId}
-        error={errors.id_category?.message}
-      />
-      <Select
-        disabled={!categoriaId}
-        label="Subcategoria"
-        emptyOption={`Seleccione una subcategoria${!categoriaId ? " (Seleccione una categoria primero)" : ""}`}
-        options={getSubcategoriasFiltradasOptions(categoriaId)}
-        {...register("id_subcategory", {
-          required: "La subcategoria es obligatoria",
-        })}
-        error={errors.id_subcategory?.message}
-      />
-      <Select
-        label="Unidad"
-        options={unidadesOptions}
-        {...register("id_unit", { required: "La unidad es obligatoria" })}
-        error={errors.id_unit?.message}
-      />
+        <Select
+          label="Categoria"
+          disabled={!familiaId}
+          options={getCategoriasFiltradasOptions(familiaId)}
+          {...register("id_category", {
+            required: "La categoria es obligatoria",
+            onChange: (e) => {
+              const id_category = e.target.value;
+              changeCategory(id_category);
+            },
+          })}
+          value={categoriaId}
+          error={errors.id_category?.message}
+        />
+        <Select
+          disabled={!categoriaId}
+          label="Subcategoria"
+          emptyOption={`Seleccione una subcategoria${!categoriaId ? " (Seleccione una categoria primero)" : ""}`}
+          options={getSubcategoriasFiltradasOptions(categoriaId)}
+          {...register("id_subcategory", {
+            required: "La subcategoria es obligatoria",
+          })}
+          error={errors.id_subcategory?.message}
+        />
+        <Select
+          label="Unidad"
+          options={unidadesOptions}
+          {...register("id_unit", { required: "La unidad es obligatoria" })}
+          error={errors.id_unit?.message}
+        />
+      </div>
 
       {/* Sección de información de solo lectura */}
       {(createdAt || updatedAt) && (
-        <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
-          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-            Información del registro
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <InfoField
-              label="Fecha de creación"
-              value={formatDateTime(createdAt)}
-            />
-            <InfoField
-              label="Última actualización"
-              value={formatDateTime(updatedAt)}
-            />
-            <InfoField label="Estado" value={active} />
-          </div>
+        <InfoFormCommons
+          createdAt={createdAt}
+          updatedAt={updatedAt}
+          active={active}
+          createdBy={createdBy}
+          updatedBy={updatedBy}
+        />
+      )}
+      
+      {/* Botón de dar de baja/reactivar */}
+      {props.onDelete && createdAt && (
+        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+          <Button
+            color={active ? "red" : "green"}
+            onClick={active ? props.onDelete : props.onReactivate}
+            fullSized
+          >
+            {active ? "Dar de baja producto" : "Reactivar producto"}
+          </Button>
         </div>
       )}
     </div>
