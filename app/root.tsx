@@ -11,6 +11,7 @@ import { useDarkMode } from "./hooks/useDarkMode";
 import type { Route } from "./+types/root";
 import "./app.css";
 import { ModalProvider } from "./context/ModalContext";
+import { AuthProvider } from "./context/AuthContext";
 
 export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
@@ -48,7 +49,9 @@ export default function App() {
   useDarkMode();
   return (
     <ModalProvider>
-      <Outlet />
+      <AuthProvider>
+        <Outlet />
+      </AuthProvider>
     </ModalProvider>
   );
 }

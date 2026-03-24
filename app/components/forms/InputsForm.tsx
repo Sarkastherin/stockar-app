@@ -25,7 +25,7 @@ export const Input = ({
 }) => {
   return (
     <div className="w-full">
-      <div className="mb-2 block">
+      <div className="mb-1 block">
         <Label htmlFor={props.id}>{props.label} {requiredField && <span className="text-red-500">*</span>}</Label>
       </div>
       <TextInput
@@ -56,7 +56,7 @@ export const Select = ({
 }) => {
   return (
     <div className="w-full">
-      <div className="mb-2 block">
+      <div className="mb-1 block">
         <Label htmlFor={props.id}>{props.label} {requiredField && <span className="text-red-500">*</span>}</Label>
       </div>
       <FlowbiteSelect {...props} color={error ? "failure" : "gray"}>
@@ -156,7 +156,7 @@ export const Textarea = ({
 }) => {
   return (
     <div className="w-full">
-      <div className="mb-2 block">
+      <div className="mb-1 block">
         <Label htmlFor={props.id}>{props.label} {requiredField && <span className="text-red-500">*</span>}</Label>
       </div>
       <FlowbiteTextarea

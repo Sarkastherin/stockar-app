@@ -2,6 +2,29 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/";
 
 type CreatePayload<T> = Omit<T, "id" | "created_at" | "updated_at" | "active">;
 type UpdatePayload<T> = Partial<Omit<T, "id" | "created_at" | "updated_at">>;
+type AuditFields = {
+  created_by?: string;
+  updated_by?: string;
+};
+
+let resolveActorId: (() => string | null | undefined) | null = null;
+
+export const setCrudActorResolver = (
+  resolver: (() => string | null | undefined) | null,
+) => {
+  resolveActorId = resolver;
+};
+
+const getAuditFields = (mode: "insert" | "update"): AuditFields => {
+  const actorId = resolveActorId?.();
+  if (!actorId) return {};
+
+  if (mode === "insert") {
+    return { created_by: actorId, updated_by: actorId };
+  }
+
+  return { updated_by: actorId };
+};
 
 export type ServiceResult<T> = {
   data: T | null;
@@ -11,6 +34,7 @@ export type ServiceResult<T> = {
 export type CrudService<T> = {
   read: () => Promise<ServiceResult<T[]>>;
   insert: (data: CreatePayload<T>) => Promise<ServiceResult<T>>;
+  insertMany: (data: CreatePayload<T>[]) => Promise<ServiceResult<T[]>>;
   update: (id: string, data: UpdatePayload<T>) => Promise<ServiceResult<T>>;
   delete: (id: string) => Promise<ServiceResult<void>>;
   desactivate: (id: string) => Promise<ServiceResult<void>>;
@@ -39,7 +63,7 @@ const parseHttpError = async (response: Response): Promise<Error> => {
   }
 };
 
-export const createCrud = <T,>(table: string): CrudService<T> => {
+export const createCrud = <T>(table: string): CrudService<T> => {
   return {
     read: async () => {
       const url = `${API_BASE_URL}${table}`;
@@ -61,12 +85,16 @@ export const createCrud = <T,>(table: string): CrudService<T> => {
     insert: async (data: CreatePayload<T>) => {
       const url = `${API_BASE_URL}${table}`;
       try {
+        const payload = {
+          ...data,
+          ...getAuditFields("insert"),
+        };
         const response = await fetch(url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(data),
+          body: JSON.stringify(payload),
         });
         if (!response.ok) {
           throw await parseHttpError(response);
@@ -74,19 +102,48 @@ export const createCrud = <T,>(table: string): CrudService<T> => {
         const result = await response.json();
         return { data: result, error: null };
       } catch (err) {
-        return { data: null, error: toError(err)};
+        return { data: null, error: toError(err) };
+      }
+    },
+    insertMany: async (data: CreatePayload<T>[]) => {
+      const url = `${API_BASE_URL}${table}/bulk`;
+      try {
+        const payload = data.map((item) => ({
+          ...item,
+          ...getAuditFields("insert"),
+        }));
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+          throw await parseHttpError(response);
+        }
+        const result = await response.json();
+        return { data: result, error: null };
+      } catch (err) {
+        const error = toError(err);
+        console.error(`Error inserting many data at ${url}:`, error);
+        return { data: null, error };
       }
     },
 
     update: async (id: string, data: UpdatePayload<T>) => {
       const url = `${API_BASE_URL}${table}/${id}`;
       try {
+        const payload = {
+          ...data,
+          ...getAuditFields("update"),
+        };
         const response = await fetch(url, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(data),
+          body: JSON.stringify(payload),
         });
         if (!response.ok) {
           throw await parseHttpError(response);
@@ -136,6 +193,6 @@ export const createCrud = <T,>(table: string): CrudService<T> => {
         console.error(`Error deactivating data at ${url}:`, error);
         return { data: null, error };
       }
-    }
+    },
   };
 };

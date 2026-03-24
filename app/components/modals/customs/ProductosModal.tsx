@@ -5,7 +5,6 @@ import { useFormState, type UseFormReturn } from "react-hook-form";
 import { useCallback } from "react";
 import { useConfigItemsProd } from "~/hooks/useConfigItemsProd";
 import InfoFormCommons from "~/components/forms/InfoFormCommons";
-import { useModal } from "~/context/ModalContext";
 
 export function ProductosModal({
   props,

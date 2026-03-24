@@ -10,6 +10,7 @@ import { Input, Select } from "./forms/InputsForm";
 import EmptyTableState from "./EmptyTableState";
 import { ButtonExport } from "./forms/ButtonExport";
 import type { Data } from "react-csv/lib/core";
+import { useModal } from "~/context/ModalContext";
 function getNestedValue(obj: any, path: string): any {
   return path.split(".").reduce((acc, part) => acc?.[part], obj);
 }
@@ -201,7 +202,7 @@ export default function Table<T>({
   const customStyles = useMemo(() => getCustomStyles(isDarkMode), [isDarkMode]);
   const storageKey =
     alternativeStorageKey || `tableFilters_${location.pathname}`;
-
+  const { openModal, closeModal } = useModal();
   // Función para crear un componente de estado con colores
   const StatusCell = ({
     row,
@@ -286,7 +287,7 @@ export default function Table<T>({
       value === "false"
     );
   };
-// Función para obtener estilos condicionales de fila
+  // Función para obtener estilos condicionales de fila
   const getInactiveRowStyles = () => {
     return {
       opacity: "0.6",
@@ -380,17 +381,24 @@ export default function Table<T>({
   useEffect(() => {
     const isFilter = Object.values(filters).some((v) => v);
     if (isFilter) {
-      confirm(
-        "Hay filtros aplicados desde tu última visita. ¿Deseas limpiar los filtros?",
-      )
-        ? (function () {
+      openModal("confirmation", {
+        props: {
+          title: "Limpiar filtros",
+          message:
+            "Hay filtros aplicados desde tu última visita. ¿Deseas limpiar los filtros?",
+          confirmText: "Sí, limpiar",
+          cancelText: "No, mantener",
+          onConfirm: () => {
+            console.log("Limpiando filtros...");
             setFilters({});
             setFilteredData(data);
             localStorage.removeItem(storageKey);
             localStorage.removeItem(`${storageKey}_page`);
             setShowFilterInfo(false);
-          })()
-        : null;
+            closeModal();
+          },
+        },
+      });
     }
   }, []);
   // Filtrar datos activos/inactivos si existe la columna de estado y el campo active y setear filterData
@@ -541,15 +549,15 @@ export default function Table<T>({
             )
           }
           conditionalRowStyles={
-          inactiveField
-            ? [
-                {
-                  when: (row: T) => isRowInactive(row),
-                  style: getInactiveRowStyles(),
-                },
-              ]
-            : undefined
-        }
+            inactiveField
+              ? [
+                  {
+                    when: (row: T) => isRowInactive(row),
+                    style: getInactiveRowStyles(),
+                  },
+                ]
+              : undefined
+          }
         />
       </div>
       {(btnExport || btnNavigate || btnOnClick) && (
@@ -557,7 +565,13 @@ export default function Table<T>({
           <div
             className={`flex justify-between w-full  py-3 px-8 hover:bg-gray-200 hover:dark:bg-gray-950`}
           >
-            {btnExport && <ButtonExport data={filteredData as Data} filename={btnExport.filename} headers={btnExport.headers}/>}
+            {btnExport && (
+              <ButtonExport
+                data={filteredData as Data}
+                filename={btnExport.filename}
+                headers={btnExport.headers}
+              />
+            )}
 
             {btnNavigate && (
               <NavLink to={btnNavigate.route}>

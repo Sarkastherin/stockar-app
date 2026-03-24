@@ -1,7 +1,9 @@
 import { useModal } from "~/context/ModalContext";
 import { Modal } from "./ModalBase";
-import { Alert, Button } from "flowbite-react";
-export type ModalType = "custom" | "form";
+import { Alert, Button, ModalBody, ModalHeader } from "flowbite-react";
+import { HiOutlineExclamationCircle } from "react-icons/hi";
+export type ModalType = "custom" | "form" | "confirmation";
+import { Modal as FlowbiteModal } from "flowbite-react";
 export default function ModalManager() {
   const { modal, messageForm, closeModal, stepForm } = useModal();
   if (!modal.type) return null;
@@ -38,7 +40,11 @@ export default function ModalManager() {
                 </div>
               )}
               {stepForm === "success" && (
-                <Button className="ms-auto" color={"green"} onClick={closeModal}>
+                <Button
+                  className="ms-auto"
+                  color={"green"}
+                  onClick={closeModal}
+                >
                   Aceptar
                 </Button>
               )}
@@ -70,6 +76,29 @@ export default function ModalManager() {
             )}
           </div>
         </Modal>
+      );
+    }
+    case "confirmation": {
+      const confirmationProps = modal.props || {};
+      return (
+        <>
+          <Modal open={true} size="md">
+            <div className="text-center">
+              <HiOutlineExclamationCircle className="mx-auto mb-4 h-14 w-14 text-gray-400 dark:text-gray-200" />
+              <h3 className="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
+                {confirmationProps.props.message}
+              </h3>
+              <div className="flex justify-center gap-4">
+                <Button color="yellow" onClick={confirmationProps.props.onConfirm}>
+                  {confirmationProps.props.confirmText || "Sí, estoy seguro"}
+                </Button>
+                <Button color="alternative" onClick={closeModal}>
+                  {confirmationProps.props.cancelText || "No, cancelar"}
+                </Button>
+              </div>
+            </div>
+          </Modal>
+        </>
       );
     }
     default:

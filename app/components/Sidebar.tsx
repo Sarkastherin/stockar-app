@@ -4,48 +4,31 @@ import {
   SidebarItemGroup,
   SidebarItems,
 } from "flowbite-react";
-import { LuPencilRuler, LuLayers2, LuLayers3, LuNetwork } from "react-icons/lu";
-import type { TabsTypes } from "~/routes/configuraciones/productos";
+import type { IconType } from "react-icons";
+import type { SidebarProps } from "flowbite-react";
 
 export function Sidebar({
+  submenu,
   activeTab,
   setActiveTab,
+  ...props
 }: {
-  activeTab: TabsTypes;
-  setActiveTab: (tab: TabsTypes) => void;
-}) {
-  const submenu = [
-    {
-      key: "familias",
-      name: "Familias",
-      icon: LuNetwork,
-    },
-    {
-      key: "categorias",
-      name: "Categorías",
-      icon: LuLayers2,
-    },
-    {
-      key: "subcategorias",
-      name: "Subcategorías",
-      icon: LuLayers3,
-    },
-    {
-      key: "unidades",
-      name: "Unidades",
-      icon: LuPencilRuler,
-    },
-  ]; //familias, categorias, subcategorias, unidades de medida
+  submenu: {
+    key: string;
+    name: string;
+    icon: IconType;
+  }[];
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+} & SidebarProps) {
   return (
-    <FlowbiteSidebar
-      aria-label="Menu de configuración de productos"
-    >
+    <FlowbiteSidebar {...props}>
       <SidebarItems>
         <SidebarItemGroup>
           {submenu.map((item) => (
             <SidebarItem
               key={item.key}
-              onClick={() => setActiveTab(item.key as TabsTypes)}
+              onClick={() => setActiveTab(item.key)}
               icon={item.icon}
               active={activeTab === item.key}
               className="cursor-pointer"

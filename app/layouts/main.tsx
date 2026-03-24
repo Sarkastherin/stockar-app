@@ -2,6 +2,7 @@ import { NavBar } from "~/components/Navbar";
 import { Outlet } from "react-router";
 import { DataProvider } from "~/context/DataContext";
 import ModalManager from "~/components/modals/ModalManager";
+import ProtectedRoute from "~/components/ProtectedRoute";
 
 export default function Layout() {
   return (
@@ -9,8 +10,10 @@ export default function Layout() {
       <NavBar />
       <div className="container mx-auto p-4">
         <DataProvider>
-          <Outlet />
-          <ModalManager />
+          <ProtectedRoute>
+            <Outlet />
+            <ModalManager />
+          </ProtectedRoute>
         </DataProvider>
       </div>
     </div>

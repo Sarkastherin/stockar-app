@@ -174,7 +174,7 @@ export default function TemplateNuevoMovimiento({
         <SelectWithSearch
           input={{
             label: "Producto",
-            placeholder: "Buscar producto",
+            placeholder: "Nombre del producto",
             value: watch("name_product") || "",
           }}
           search={{

@@ -107,6 +107,21 @@ type DataContextType = {
   ) => Promise<ServiceResult<MovimientoDB>>;
   deleteMovimiento: (id: string) => Promise<ServiceResult<void>>;
   reactivateMovimiento: (id: string) => Promise<ServiceResult<MovimientoDB>>;
+  createManyMovimientos: (
+    data: Omit<
+      MovimientoDB,
+      "id" | "created_at" | "updated_at" | "name_product" | "active"
+    >[],
+  ) => Promise<ServiceResult<MovimientoDB[]>>;
+  createUsuario: (
+    data: Omit<UsuarioDB, "id" | "created_at" | "updated_at" | "active">,
+  ) => Promise<ServiceResult<UsuarioDB>>;
+  updateUsuario: (
+    id: string,
+    data: Partial<Omit<UsuarioDB, "id" | "created_at" | "updated_at">>,
+  ) => Promise<ServiceResult<UsuarioDB>>;
+  deleteUsuario: (id: string) => Promise<ServiceResult<void>>;
+  reactivateUsuario: (id: string) => Promise<ServiceResult<UsuarioDB>>;
 };
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -143,9 +158,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       }
       return null;
     }
-
-    setData(data);
-    return data;
+    // devolver data ordenada por created_at desc
+    // evaluar si created_at existe en el tipo T
+    let sortData = data;
+    if (data.length > 0 && "created_at" in (data[0] as object)) {
+      sortData = data.sort((a, b) => {
+        const aDate = (a as any)?.created_at;
+        const bDate = (b as any)?.created_at;
+        if (!aDate || !bDate) return 0;
+        return new Date(bDate).getTime() - new Date(aDate).getTime();
+      });
+    }
+    setData(sortData);
+    return sortData;
   };
   const getProductos = async () => {
     const productosData = await fetchAndSetData<ProductoDB>(
@@ -407,6 +432,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     await getMovimientos();
     return response;
   };
+  const createManyMovimientos = async (
+    data: Omit<
+      MovimientoDB,
+      "id" | "created_at" | "updated_at" | "name_product" | "active"
+    >[],
+  ) => {
+    const response = await movementsServices.insertMany(data);
+    await getMovimientos();
+    return response;
+  };
   /* UPDATE */
   const updateProducto = async (
     id: string,
@@ -515,7 +550,33 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   };
   const reactivateMovimiento = async (id: string) => {
     const response = await movementsServices.update(id, { active: true });
-    await getMovimientos()
+    await getMovimientos();
+    return response;
+  };
+  /* USUARIOS CRUD */
+  const createUsuario = async (
+    data: Omit<UsuarioDB, "id" | "created_at" | "updated_at" | "active">,
+  ) => {
+    const response = await userServices.insert(data);
+    await getUsuarios();
+    return response;
+  };
+  const updateUsuario = async (
+    id: string,
+    data: Partial<Omit<UsuarioDB, "id" | "created_at" | "updated_at">>,
+  ) => {
+    const response = await userServices.update(id, data);
+    await getUsuarios();
+    return response;
+  };
+  const deleteUsuario = async (id: string) => {
+    const response = await userServices.desactivate(id);
+    await getUsuarios();
+    return response;
+  };
+  const reactivateUsuario = async (id: string) => {
+    const response = await userServices.update(id, { active: true });
+    await getUsuarios();
     return response;
   };
   return (
@@ -563,6 +624,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         updateMovimiento,
         deleteMovimiento,
         reactivateMovimiento,
+        createManyMovimientos,
+        createUsuario,
+        updateUsuario,
+        deleteUsuario,
+        reactivateUsuario,
       }}
     >
       {children}
