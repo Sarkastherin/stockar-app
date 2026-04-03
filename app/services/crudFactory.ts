@@ -1,5 +1,4 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000/";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/";
 
 import type { AuthContextType } from "~/context/AuthContext";
 
@@ -111,17 +110,24 @@ export const createCrud = <T>(
       const url = `${API_BASE_URL}${table}`;
       try {
         const response = await fetchWithAuth(url);
-
         if (!response.ok) {
           throw await parseHttpError(response);
         }
 
         const result = (await response.json()) as ApiEnvelope<T[]>;
-        return {
-          data: Array.isArray(result.data) ? result.data : [],
-          pagination: result.pagination ?? null,
-          error: null,
-        };
+        if (table === "users") {
+          return {
+            data: Array.isArray(result) ? result : [],
+            pagination: null,
+            error: null,
+          };
+        } else {
+          return {
+            data: Array.isArray(result.data) ? result.data : [],
+            pagination: result.pagination ?? null,
+            error: null,
+          };
+        }
       } catch (err) {
         const error = toError(err);
         console.error(`Error fetching data from ${url}:`, error);

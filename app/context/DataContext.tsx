@@ -558,6 +558,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     data: Omit<UsuarioDB, "id" | "created_at" | "updated_at" | "active">,
   ) => {
     const response = await userServices.insert(data);
+    console.log("Create user response:", response);
     await getUsuarios();
     return response;
   };
