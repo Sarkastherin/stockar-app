@@ -11,4 +11,7 @@ export type UsuarioDB = CommonPropsDB & {
   last_name: string;
   email: string;
   role: "ADMIN" | "SUPERVISOR" | "USER";
+  password: string;
+  force_password_change?: boolean;
+  confirm_password?: string;
 };

@@ -16,15 +16,7 @@ import type {
   StockItem,
 } from "~/types/productos";
 import type { UsuarioDB } from "~/types/usuarios";
-import {
-  productsServices,
-  categoriesServices,
-  familiesServices,
-  movementsServices,
-  subcategoriesServices,
-  unitsServices,
-  userServices,
-} from "~/services/cruds";
+import { useProductsServices, useUnitsServices, useFamiliesServices, useCategoriesServices, useSubcategoriesServices, useMovementsServices, useUserServices } from "~/services/useCrud";
 import type { CrudService, ServiceResult } from "~/services/crudFactory";
 
 type DataContextType = {
@@ -55,7 +47,7 @@ type DataContextType = {
     id: string,
     data: Partial<Omit<ProductoDB, "id" | "created_at" | "updated_at">>,
   ) => Promise<ServiceResult<ProductoDB>>;
-  deleteProducto: (id: string) => Promise<ServiceResult<void>>;
+  deleteProducto: (id: string) => Promise<ServiceResult<ProductoDB>>;
   reactivateProducto: (id: string) => Promise<ServiceResult<ProductoDB>>;
   createUnidades: (
     data: Omit<UnidadesDB, "id" | "created_at" | "updated_at" | "active">,
@@ -85,10 +77,10 @@ type DataContextType = {
     id: string,
     data: Partial<Omit<SubcategoriaDB, "id" | "created_at" | "updated_at">>,
   ) => Promise<ServiceResult<SubcategoriaDB>>;
-  deleteFamilias: (id: string) => Promise<ServiceResult<void>>;
-  deleteCategorias: (id: string) => Promise<ServiceResult<void>>;
-  deleteSubcategorias: (id: string) => Promise<ServiceResult<void>>;
-  deleteUnidades: (id: string) => Promise<ServiceResult<void>>;
+  deleteFamilias: (id: string) => Promise<ServiceResult<FamiliaDB>>;
+  deleteCategorias: (id: string) => Promise<ServiceResult<CategoriaDB>>;
+  deleteSubcategorias: (id: string) => Promise<ServiceResult<SubcategoriaDB>>;
+  deleteUnidades: (id: string) => Promise<ServiceResult<UnidadesDB>>;
   reactivateFamilias: (id: string) => Promise<ServiceResult<FamiliaDB>>;
   reactivateCategorias: (id: string) => Promise<ServiceResult<CategoriaDB>>;
   reactivateSubcategorias: (
@@ -105,7 +97,7 @@ type DataContextType = {
     id: string,
     data: Partial<Omit<MovimientoDB, "id" | "created_at" | "updated_at">>,
   ) => Promise<ServiceResult<MovimientoDB>>;
-  deleteMovimiento: (id: string) => Promise<ServiceResult<void>>;
+  deleteMovimiento: (id: string) => Promise<ServiceResult<MovimientoDB>>;
   reactivateMovimiento: (id: string) => Promise<ServiceResult<MovimientoDB>>;
   createManyMovimientos: (
     data: Omit<
@@ -120,7 +112,7 @@ type DataContextType = {
     id: string,
     data: Partial<Omit<UsuarioDB, "id" | "created_at" | "updated_at">>,
   ) => Promise<ServiceResult<UsuarioDB>>;
-  deleteUsuario: (id: string) => Promise<ServiceResult<void>>;
+  deleteUsuario: (id: string) => Promise<ServiceResult<UsuarioDB>>;
   reactivateUsuario: (id: string) => Promise<ServiceResult<UsuarioDB>>;
 };
 
@@ -129,6 +121,14 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const productsServices = useProductsServices();
+  const unitsServices = useUnitsServices();
+  const familiesServices = useFamiliesServices();
+  const categoriesServices = useCategoriesServices();
+  const subcategoriesServices = useSubcategoriesServices();
+  const movementsServices = useMovementsServices();
+  const userServices = useUserServices();
+  
   const [productos, setProductos] = useState<ProductoDB[] | null>(null);
   const [unidades, setUnidades] = useState<UnidadesDB[] | null>(null);
   const [subcategorias, setSubcategorias] = useState<SubcategoriaDB[] | null>(

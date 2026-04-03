@@ -10,10 +10,16 @@ import { setCrudActorResolver } from "~/services/crudFactory";
 const API_BASE_URL =
   (import.meta.env.VITE_API_URL as string) || "http://localhost:3000";
 
-interface AuthContextType {
+export interface AuthContextType {
   me: () => Promise<any | null>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  forgotPassword: (email: string) => Promise<{ token?: string }>;
+  resetPassword: (
+    token: string,
+    password: string,
+    confirm_password: string,
+  ) => Promise<any>;
   fetchWithAuth: (
     input: RequestInfo,
     init?: RequestInit,
@@ -21,6 +27,10 @@ interface AuthContextType {
   ) => Promise<Response>;
   user: any | null;
   loading: boolean;
+  changePassword: (
+    id: string,
+    password: string,
+  ) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -53,7 +63,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     });
     if (res.status === 200) {
       const body = await res.json();
-      // backend returns { user: { ... } }
       return body;
     }
     if (res.status === 401) return null;
@@ -79,6 +88,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     await fetch(url, { method: "POST", credentials: "include" });
     setUser(null);
   }, []);
+  const forgotPassword = useCallback(async (email: string) => {
+    const url = resolveUrl("/api/auth/forgot-password") as string;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    if (!res.ok) throw new Error("Forgot password request failed");
+    return await res.json();
+  }, []);
+
+  const resetPassword = useCallback(
+    async (token: string, password: string, confirm_password: string) => {
+      const url = resolveUrl("/api/auth/reset-password") as string;
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, password, confirm_password }),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.message || "Reset password failed");
+        return result;
+      } catch (error) {
+        console.error("Error in resetPassword:", error);
+        throw error;
+      }
+    },
+    [],
+  );
 
   const tryRefresh = useCallback(async (): Promise<boolean> => {
     const url = resolveUrl("/api/auth/refresh") as string;
@@ -128,7 +167,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     },
     [me, tryRefresh],
   );
-
+  const changePassword = useCallback(
+    async (id: string, password: string) => {
+      const url = `${API_BASE_URL}users/${id}`;
+      const res = await fetch(url, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({password, force_password_change: false }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message || "Change password failed");
+      // Refrescar datos del usuario después de cambiar la contraseña
+      try {
+        const body = await me();
+        setUser(body?.user ?? null);
+      } catch {
+        // noop
+      }
+    },
+    [],
+  );
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -136,9 +194,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const result = await me();
         if (!mounted) return;
         setUser(result?.user ?? null);
-      } catch (err) {
-        if (!mounted) return;
-        setUser(null);
+      } catch (err: any) {
+        // Si el error es 401, intenta refresh
+        if (err?.message?.includes('401')) {
+          try {
+            const refreshed = await tryRefresh();
+            if (refreshed) {
+              const result = await me();
+              if (!mounted) return;
+              setUser(result?.user ?? null);
+            } else {
+              if (!mounted) return;
+              setUser(null);
+            }
+          } catch {
+            if (!mounted) return;
+            setUser(null);
+          }
+        } else {
+          if (!mounted) return;
+          setUser(null);
+        }
       } finally {
         if (!mounted) return;
         setLoading(false);
@@ -147,7 +223,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => {
       mounted = false;
     };
-  }, [me]);
+  }, [me, tryRefresh]);
 
   useEffect(() => {
     setCrudActorResolver(() => user?.id ?? null);
@@ -159,7 +235,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <AuthContext.Provider
-      value={{ me, login, logout, fetchWithAuth, user, loading }}
+      value={{
+        me,
+        login,
+        logout,
+        fetchWithAuth,
+        user,
+        loading,
+        forgotPassword,
+        resetPassword,
+        changePassword,
+      }}
     >
       {children}
     </AuthContext.Provider>

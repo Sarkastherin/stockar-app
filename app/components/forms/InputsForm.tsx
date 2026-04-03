@@ -46,6 +46,7 @@ export const Select = ({
   options,
   requiredField = false,
   emptyOption = "Seleccione una opción",
+  disabledEmptyOption = false,
   ...props
 }: SelectHTMLAttributes<HTMLSelectElement> & {
   error?: string;
@@ -53,6 +54,7 @@ export const Select = ({
   requiredField?: boolean;
   options: { value: string; label: string; disabled?: boolean }[];
   emptyOption?: string;
+  disabledEmptyOption?: boolean;
 }) => {
   return (
     <div className="w-full">
@@ -60,7 +62,7 @@ export const Select = ({
         <Label htmlFor={props.id}>{props.label} {requiredField && <span className="text-red-500">*</span>}</Label>
       </div>
       <FlowbiteSelect {...props} color={error ? "failure" : "gray"}>
-        <option value="">{emptyOption}</option>
+        <option value="" disabled={disabledEmptyOption}>{emptyOption}</option>
         {options.map((option) => (
           <option
             key={option.value}

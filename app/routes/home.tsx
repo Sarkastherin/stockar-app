@@ -16,11 +16,7 @@ import { useDataContext } from "~/context/DataContext";
 import { useEffect } from "react";
 import { getIcon } from "~/components/IconComponent";
 import { FiDownload, FiUpload } from "react-icons/fi";
-import {
-  type MovimientoConDetalles,
-  tiposMovimiento,
-} from "~/types/movimientos";
-import { formatDateTime } from "~/components/forms/InfoField";
+import { tiposMovimiento } from "~/types/movimientos";
 import { relativeTimeFormat } from "~/utils/functions";
 export function meta({}: Route.MetaArgs) {
   return [
@@ -62,8 +58,6 @@ const QuickActionLink = [
 ];
 export default function Home() {
   const {
-    productos,
-    getProductos,
     movimientosConDetalles,
     getMovimientosConDetalles,
   } = useDataContext();

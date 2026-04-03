@@ -37,6 +37,7 @@ const columns: TableColumn<UsuarioDB>[] = [
       </Badge>
     ),
     sortable: true,
+    width: "250px",
   },
 
   {
@@ -46,7 +47,7 @@ const columns: TableColumn<UsuarioDB>[] = [
       return role ? <Badge color={role.color}>{role.label}</Badge> : row.role;
     },
     sortable: true,
-    width: "200px",
+    width: "130px",
   },
   {
     name: "Fecha de creación",
@@ -57,7 +58,7 @@ const columns: TableColumn<UsuarioDB>[] = [
         day: "2-digit",
       }),
     sortable: true,
-    width: "200px",
+    width: "110px",
   },
   {
     name: "Última actualización",
@@ -68,7 +69,7 @@ const columns: TableColumn<UsuarioDB>[] = [
         day: "2-digit",
       }),
     sortable: true,
-    width: "200px",
+    width: "110px",
   },
   {
     name: "Estado",

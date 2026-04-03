@@ -1,44 +1,36 @@
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
-import {
-  Button,
-  Card,
-  Label,
-  Checkbox,
-  Spinner,
-} from "flowbite-react";
+import { Button, Card, Spinner } from "flowbite-react";
 import { Logo } from "~/components/Logo";
 import type { Route } from "./+types/home";
 import { Link, useNavigate } from "react-router";
 import { Input } from "~/components/forms/InputsForm";
 import { useAuth } from "~/context/AuthContext";
+import { useLocation } from "react-router";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Login - StockAR" },
-    { name: "description", content: "Inicia sesión en StockAR" },
+    { title: "Reset Password - StockAR" },
+    { name: "description", content: "Reset your password in StockAR" },
   ];
 }
 
-interface LoginFormInputs {
-  email: string;
-  password: string;
-  rememberMe: boolean;
-}
-
-export default function Login() {
-  const { login, user, loading } = useAuth();
+export default function ResetPassword() {
+  const { user, loading, resetPassword } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = location.state as { token?: string } | undefined;
+  const token = state?.token;
   const [submitError, setSubmitError] = useState<string | null>(null);
   const {
     register,
+    watch,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginFormInputs>({
+  } = useForm<{ password: string; confirm_password: string }>({
     defaultValues: {
-      email: "",
       password: "",
-      rememberMe: false,
+      confirm_password: "",
     },
   });
 
@@ -48,15 +40,19 @@ export default function Login() {
     }
   }, [loading, user, navigate]);
 
-  const onSubmit = async (data: LoginFormInputs) => {
-    const { email, password } = data;
+  const onSubmit = async (data: { password: string; confirm_password: string }) => {
+    const { password, confirm_password } = data;
     setSubmitError(null);
     try {
-      await login(email, password);
-      navigate("/", { replace: true });
+      if (!token) {
+        setSubmitError("Token inválido");
+        return;
+      }
+      const res = await resetPassword(token, password, confirm_password);
+      navigate("/login", { replace: true });
     } catch (error) {
-      setSubmitError("No se pudo iniciar sesión. Verifica tus credenciales.");
-      console.error("Login error:", error);
+      console.error("Reset password error:", error);
+      setSubmitError("Error de red o servidor");
     }
   };
 
@@ -79,7 +75,7 @@ export default function Login() {
     <div className="min-h-screen w-full flex justify-center items-center bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-colors px-4 sm:px-6 md:px-8">
       <Card className="w-full max-w-md shadow-lg">
         {/* Header */}
-        <div className="flex flex-col items-center mb-8">
+        <div className="flex flex-col items-center mb-4">
           <div className="mb-4">
             <Logo className="h-16 sm:h-20 text-indigo-600 dark:text-indigo-400" />
           </div>
@@ -92,20 +88,13 @@ export default function Login() {
           </p>
         </div>
         {/* Form */}
-        <form className="flex max-w-md flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
+        <h2  className="text-xl text-center font-bold text-indigo-600 dark:text-indigo-400">Cambiar contraseña</h2>
+        <form
+          className="flex max-w-md flex-col gap-4 pb-4"
+          onSubmit={handleSubmit(onSubmit)}
+        >
           <Input
-            label="Tu correo electrónico"
-            {...register("email", {
-              required: "El correo es requerido",
-              pattern: {
-                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                message: "Correo inválido",
-              },
-            })}
-            error={errors.email?.message}
-          />
-          <Input
-            label="Tu contraseña"
+            label="Nueva contraseña"
             type="password"
             {...register("password", {
               required: "La contraseña es requerida",
@@ -116,38 +105,27 @@ export default function Login() {
             })}
             error={errors.password?.message}
           />
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Checkbox id="remember" />
-              <Label htmlFor="remember">Recuérdame</Label>
-            </div>
-            <Link
-              to="/forgot-password"
-              className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
-            >
-              ¿Olvidaste tu contraseña?
-            </Link>
-          </div>
+          <Input
+            label="Confirmar nueva contraseña"
+            type="password"
+            {...register("confirm_password", {
+              required: "La confirmación de la contraseña es requerida",
+              validate: (value) =>
+                value === watch("password") || "Las contraseñas no coinciden",
+            })}
+            error={errors.confirm_password?.message}
+          />
 
-          <Button color="indigo" type="submit">
-            Iniciar sesión
+          <Button className="mt-2" color="indigo" type="submit">
+            Cambiar contraseña
           </Button>
           {submitError && (
-            <p className="text-sm text-red-600 dark:text-red-400">{submitError}</p>
+            <p className="text-sm text-red-600 dark:text-red-400">
+              {submitError}
+            </p>
           )}
         </form>
-        {/* Footer */}
-        <div className="mt-6 text-center border-t border-gray-200 dark:border-gray-700 pt-6">
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
-            ¿No tienes cuenta?{" "}
-            <Link
-              to="#"
-              className="text-indigo-600 dark:text-indigo-400 hover:underline font-semibold"
-            >
-              Regístrate aquí
-            </Link>
-          </p>
-        </div>
+        
       </Card>
     </div>
   );

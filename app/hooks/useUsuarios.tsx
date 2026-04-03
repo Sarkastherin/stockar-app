@@ -11,13 +11,16 @@ export const useUsuarios = () => {
     defaultValues: {},
   });
   const onCreate = async (data: UsuarioDB) => {
-    const { name, last_name, email, role } = data;
+    const { name, last_name, email, role, password, confirm_password } = data;
     const result = await createUsuario({
       name,
       last_name,
       email,
       role,
+      password,
+      confirm_password
     });
+    console.log(result);
     if (result.error) {
       setMessageForm(result.error.message || "Error al crear el usuario");
       setStepForm("error");
@@ -27,12 +30,28 @@ export const useUsuarios = () => {
     setStepForm("success");
   };
   const onUpdate = async (data: UsuarioDB) => {
-    const { id, name, last_name, email, role } = data;
+    const {
+      id,
+      name,
+      last_name,
+      email,
+      role,
+      password,
+      force_password_change,
+    } = data;
     const payload = prepareUpdatePayload({
       dirtyFields: form.formState.dirtyFields,
-      formData: { name, last_name, email, role } as UsuarioDB,
+      formData: {
+        name,
+        last_name,
+        email,
+        role,
+        password,
+        force_password_change,
+      } as UsuarioDB,
     });
     const result = await updateUsuario(id, payload);
+    console.log(result);
     if (result.error) {
       setMessageForm(result.error.message || "Error al actualizar el usuario");
       setStepForm("error");
@@ -44,9 +63,7 @@ export const useUsuarios = () => {
   const onDelete = async (id: string) => {
     const result = await deleteUsuario(id);
     if (result.error) {
-      setMessageForm(
-        result.error.message || "Error al dar de baja el usuario",
-      );
+      setMessageForm(result.error.message || "Error al dar de baja el usuario");
       setStepForm("error");
       return;
     }
