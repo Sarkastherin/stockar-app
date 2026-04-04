@@ -1,15 +1,20 @@
 import type { Route } from "../+types/home";
-import { Button, HelperText, Spinner, TextInput } from "flowbite-react";
+import { Button, HelperText, TextInput } from "flowbite-react";
 import { FiDownload, FiUpload } from "react-icons/fi";
 import { useForm, useFieldArray } from "react-hook-form";
-import type { MovimientoConDetalles } from "~/types/movimientos";
-import { useState, useEffect, useRef } from "react";
+import type { MovimientoDB } from "~/types/movimientos";
+import type { StockListItem } from "~/types/productos";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { FaRegTrashAlt } from "react-icons/fa";
 import { commonProps } from "~/types/commonsTypes";
 import { useDataContext } from "~/context/DataContext";
 import { useModal } from "~/context/ModalContext";
 import { SeleccionarProductoModal } from "~/components/modals/customs/SeleccionarProductoModal";
 import { useSearchParams } from "react-router";
+import { useConfigItemsProd } from "~/hooks/useConfigItemsProd";
+import { Select } from "~/components/forms/InputsForm";
+import { tiposLocations } from "~/types/productos";
+import { Input } from "~/components/forms/InputsForm";
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "Nuevo Movimiento" },
@@ -20,7 +25,9 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 type FormValues = {
-  movimientos: MovimientoConDetalles[];
+  movimientos: MovimientoDB[];
+  id_origin?: string;
+  id_destination?: string;
 };
 
 const movementTypeByQuery: Record<string, "ENTRY" | "EXIT"> = {
@@ -29,18 +36,40 @@ const movementTypeByQuery: Record<string, "ENTRY" | "EXIT"> = {
 };
 type Step = "form" | "success" | "error";
 export default function NuevoMovimiento() {
-  const [step, setStep] = useState<{type: Step, message?: string}>({type: "form", message: ""});
+  const [step, setStep] = useState<{ type: Step; message?: string }>({
+    type: "form",
+    message: "",
+  });
   const { createManyMovimientos } = useDataContext();
-  const { stockItems, getStockItems } = useDataContext();
   const [searchParams] = useSearchParams();
   const lastAppliedQueryType = useRef<string | null>(null);
-  useEffect(() => {
-    if (!stockItems) getStockItems();
-  }, [stockItems, getStockItems]);
+  // Stock por índice de fila, poblado al seleccionar el producto desde el modal
+  const [rowStock, setRowStock] = useState<Record<number, number>>({});
   const { openModal, closeModal } = useModal();
+  const { ubicaciones } = useConfigItemsProd();
+  const allLocationOptions = useMemo(
+    () =>
+      (ubicaciones ?? []).map((u) => ({
+        value: u.id,
+        label: `${u.name} (${tiposLocations.find((t) => t.value === u.type)?.label ?? u.type})`,
+      })),
+    [ubicaciones],
+  );
+  const locationOptions = useMemo(
+    () =>
+      (ubicaciones ?? [])
+        .filter((u) => u.type === "WAREHOUSE")
+        .map((u) => ({
+          value: u.id,
+          label: `${u.name} (${tiposLocations.find((t) => t.value === u.type)?.label ?? u.type})`,
+        })),
+    [ubicaciones],
+  );
   const form = useForm<FormValues>({
     defaultValues: {
       movimientos: [],
+      id_origin: "",
+      id_destination: "",
     },
   });
   const fieldArray = useFieldArray({
@@ -74,7 +103,7 @@ export default function NuevoMovimiento() {
         type: selectedType,
         id_product: "",
         qty: 0,
-        name_product: "",
+        product_name: "",
         note: "",
         reference: "",
       });
@@ -93,23 +122,30 @@ export default function NuevoMovimiento() {
       type: mov.type,
       note: mov.note,
       reference: mov.reference,
+      id_origin: data.id_origin || undefined,
+      id_destination: data.id_destination || undefined,
     }));
     const result = await createManyMovimientos(movimientosToCreate);
     if (result.error) {
-      setStep({type: "error", message: result.error.message || "Error desconocido"});
+      setStep({
+        type: "error",
+        message: result.error.message || "Error desconocido",
+      });
       return;
     }
-    setStep({type: "success"});
+    setStep({ type: "success" });
   };
   const selectType = (type: "ENTRY" | "EXIT") => {
     setMovementType(type);
+    form.setValue("id_origin", "");
+    form.setValue("id_destination", "");
     if (fieldArray.fields.length > 0) return;
     fieldArray.append({
       ...commonProps,
       type: type,
       id_product: "",
       qty: 0,
-      name_product: "",
+      product_name: "",
       note: "",
       reference: "",
     });
@@ -120,23 +156,18 @@ export default function NuevoMovimiento() {
   };
   const handleOpenProductModal = (index: number) => {
     openModal("custom", {
+      title: "Seleccionar producto",
       component: SeleccionarProductoModal,
       props: {
-        onSelect: (product: { id: string; name: string }) => {
-          form.setValue(`movimientos.${index}.id_product`, product.id);
-          form.setValue(`movimientos.${index}.name_product`, product.name);
+        onSelect: (item: StockListItem) => {
+          form.setValue(`movimientos.${index}.id_product`, item.id);
+          form.setValue(`movimientos.${index}.product_name`, item.name);
+          setRowStock((prev) => ({ ...prev, [index]: Number(item.stock) }));
           closeModal();
         },
       },
     });
   };
-  if (!stockItems) {
-    return (
-      <div className="flex justify-center items-center">
-        <Spinner aria-label="Cargando..." />
-      </div>
-    );
-  }
   return (
     <>
       {step.type === "form" && (
@@ -209,6 +240,49 @@ export default function NuevoMovimiento() {
               Selecciona el tipo de movimiento antes de agregar artículos.
             </HelperText>
           </fieldset>
+
+          {movementType === "ENTRY" && (
+            <fieldset className="mt-4">
+              <Select
+                label="Ubicación"
+                id="id_destination"
+                requiredField
+                emptyOption="Seleccionar ubicación"
+                options={allLocationOptions}
+                error={form.formState.errors.id_destination?.message}
+                {...form.register("id_destination", {
+                  required: "Seleccione una ubicación destino",
+                })}
+              />
+            </fieldset>
+          )}
+
+          {movementType === "EXIT" && (
+            <fieldset className="mt-4 grid grid-cols-2 gap-3">
+              <Select
+                label="Ubicación origen"
+                id="id_origin"
+                requiredField
+                emptyOption="Seleccionar origen"
+                options={locationOptions}
+                error={form.formState.errors.id_origin?.message}
+                {...form.register("id_origin", {
+                  required: "Seleccione una ubicación origen",
+                })}
+              />
+              <Select
+                label="Ubicación destino"
+                id="id_destination"
+                requiredField
+                emptyOption="Seleccionar destino"
+                options={allLocationOptions}
+                error={form.formState.errors.id_destination?.message}
+                {...form.register("id_destination", {
+                  required: "Seleccione una ubicación destino",
+                })}
+              />
+            </fieldset>
+          )}
           <fieldset className="mt-6 space-y-3">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
               Artículos ({fieldArray.fields.length})
@@ -230,7 +304,7 @@ export default function NuevoMovimiento() {
                       ...commonProps,
                       type: movementType || "",
                       id_product: "",
-                      name_product: "",
+                      product_name: "",
                       qty: 0,
                     })
                   }
@@ -246,31 +320,24 @@ export default function NuevoMovimiento() {
                     className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 hover:shadow-md transition-shadow"
                   >
                     <div className="grid grid-cols-12 gap-3 items-end">
-                      <div className="col-span-7">
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Producto
-                        </label>
-                        <TextInput
-                          sizing="sm"
+                      <div className="col-span-12 md:col-span-7">
+                        <Input
+                          label="Producto"
                           type="text"
                           placeholder="Nombre del producto"
-                          className="text-center font-semibold"
                           readOnly
                           onClick={() => handleOpenProductModal(index)}
                           value={
-                            form.watch(`movimientos.${index}.name_product`) ||
+                            form.watch(`movimientos.${index}.product_name`) ||
                             ""
                           }
                         />
                       </div>
-                      <div className="col-span-2">
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Cantidad
-                        </label>
+                      <div className="col-span-5 md:col-span-2">
                         <div className="relative">
-                          <TextInput
+                          <Input
+                            label="Cantidad"
                             step={0.1}
-                            sizing="sm"
                             type="number"
                             placeholder="0"
                             color={
@@ -290,14 +357,7 @@ export default function NuevoMovimiento() {
                                       value > 0 ||
                                       "La cantidad debe ser mayor a 0"
                                     );
-                                  const stockDisponible =
-                                    stockItems.find(
-                                      (item) =>
-                                        item.id ===
-                                        form.watch(
-                                          `movimientos.${index}.id_product`,
-                                        ),
-                                    )?.stock ?? 0;
+                                  const stockDisponible = rowStock[index] ?? 0;
                                   return (
                                     value <= stockDisponible ||
                                     "Cantidad excede el stock disponible"
@@ -318,25 +378,25 @@ export default function NuevoMovimiento() {
                           )}
                         </div>
                       </div>
-                      <div className="col-span-2">
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Stock
-                        </label>
-                        <div className="h-9 flex items-center justify-center text-sm font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-                          {stockItems.find(
-                            (item) =>
-                              item.id ===
-                              form.watch(`movimientos.${index}.id_product`),
-                          )?.stock ?? "-"}
-                        </div>
+                      <div className="col-span-5 md:col-span-2">
+                        <Input
+                          label="Stock"
+                          type="text"
+                          placeholder="Stock"
+                          readOnly
+                          value={
+                            rowStock[index] !== undefined
+                              ? Number(rowStock[index]).toFixed(2)
+                              : "-"
+                          }
+                        />
                       </div>
-                      <div className="col-span-1 flex items-center justify-center">
+                      <div className="col-span-2 md:col-span-1 flex items-center justify-center">
                         <Button
                           type="button"
-                          size="sm"
                           color="red"
                           onClick={() => fieldArray.remove(index)}
-                          className="px-2.5 "
+                          className="px-3 "
                           title="Eliminar artículo"
                         >
                           <FaRegTrashAlt className="w-4 h-4" />
@@ -356,7 +416,7 @@ export default function NuevoMovimiento() {
                       ...commonProps,
                       type: movementType,
                       id_product: "",
-                      name_product: "",
+                      product_name: "",
                       qty: 0,
                     });
                   }}
@@ -408,7 +468,7 @@ export default function NuevoMovimiento() {
             color="green"
             onClick={() => {
               form.reset({ movimientos: [] });
-              setStep({type: "form"});
+              setStep({ type: "form" });
             }}
           >
             Registrar otro movimiento
@@ -421,7 +481,8 @@ export default function NuevoMovimiento() {
             Error al registrar el movimiento
           </h2>
           <p className="text-gray-700 dark:text-gray-300 mb-6">
-            {step.message || "Ha ocurrido un error al intentar guardar el movimiento. Por favor, inténtelo de nuevo."}
+            {step.message ||
+              "Ha ocurrido un error al intentar guardar el movimiento. Por favor, inténtelo de nuevo."}
           </p>
           <Button
             className="self-center"
@@ -429,7 +490,7 @@ export default function NuevoMovimiento() {
             color="red"
             onClick={() => {
               form.reset({ movimientos: [] });
-              setStep({type: "form"});
+              setStep({ type: "form" });
             }}
           >
             Intentar nuevamente

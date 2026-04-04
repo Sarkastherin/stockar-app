@@ -2,8 +2,8 @@ import type { ChangeEvent } from "react";
 import { Badge } from "flowbite-react";
 import { useMemo, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
-import type { MovimientoConDetalles } from "~/types/movimientos";
-import { Input } from "~/components/forms/InputsForm";
+import type { MovimientoDB } from "~/types/movimientos";
+import { Input, Select } from "~/components/forms/InputsForm";
 import { InfoField } from "~/components/forms/InfoField";
 
 export function AjusteStockModal({
@@ -11,11 +11,12 @@ export function AjusteStockModal({
 }: {
   props: {
     title: string;
-    form: UseFormReturn<MovimientoConDetalles>;
+    form: UseFormReturn<MovimientoDB>;
     stockActual: number;
+    locationOptions?: { value: string; label: string }[];
   };
 }) {
-  const { form, stockActual } = props;
+  const { form, stockActual, locationOptions = [] } = props;
   const movementType = form.watch("type");
   const [stockReal, setStockReal] = useState<string>("");
   const [showResumen, setShowResumen] = useState(false);
@@ -70,7 +71,7 @@ export function AjusteStockModal({
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
         <div className="md:col-span-2">
-          <InfoField label="Producto" value={form.watch("name_product")} />
+          <InfoField label="Producto" value={form.watch("product_name")} />
         </div>
         <InfoField label="Stock actual" value={stockActual.toString()} />
       </div>
@@ -86,6 +87,20 @@ export function AjusteStockModal({
           className="h-14 text-2xl font-bold text-center tracking-wide"
         />
       </div>
+
+      {locationOptions.length > 0 && (
+        <Select
+          label="Ubicación"
+          id="id_destination"
+          emptyOption="Sin depósito específico"
+          requiredField
+          options={locationOptions}
+          {...form.register("id_destination", {
+            required: "La ubicación es requerida para este producto",
+          })}
+          error={form.formState.errors.id_destination?.message}
+        />
+      )}
 
       {/* Información sobre el movimiento que se creará */}
       {showResumen && (

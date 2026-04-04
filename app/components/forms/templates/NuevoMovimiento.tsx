@@ -4,13 +4,12 @@ import {
   FiTrendingUp,
   FiUpload,
 } from "react-icons/fi";
-import type { MovimientoConDetalles } from "~/types/movimientos";
+import type { MovimientoDB } from "~/types/movimientos";
 import { useDataContext } from "~/context/DataContext";
-import type { UseFormReturn } from "node_modules/react-hook-form/dist/types/form";
 import { useEffect } from "react";
 import { Spinner } from "flowbite-react";
 import { HelperText } from "flowbite-react";
-import { useFormState } from "react-hook-form";
+import { useFormState, type UseFormReturn } from "react-hook-form";
 import {
   Input,
   Textarea,
@@ -19,7 +18,7 @@ import {
 export default function TemplateNuevoMovimiento({
   form,
 }: {
-  form: UseFormReturn<MovimientoConDetalles>;
+  form: UseFormReturn<MovimientoDB>;
 }) {
   const { register, control, watch, setValue } = form;
   const movementType = watch("type");
@@ -47,7 +46,7 @@ export default function TemplateNuevoMovimiento({
         <label className="block text-sm font-medium text-gray-900 dark:text-white mb-3">
           Tipo de movimiento
         </label>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
             onClick={() => setValue("type", "ENTRY", { shouldValidate: true })}
@@ -175,7 +174,7 @@ export default function TemplateNuevoMovimiento({
           input={{
             label: "Producto",
             placeholder: "Nombre del producto",
-            value: watch("name_product") || "",
+            value: watch("product_name") || "",
           }}
           search={{
             placeholder: "Buscar producto",
@@ -184,10 +183,14 @@ export default function TemplateNuevoMovimiento({
             items: productos,
             onSelect: (producto) => {
               setValue("id_product", producto.id);
-              setValue("name_product", producto.name);
+              setValue("product_name", producto.name);
             },
           }}
-          error={errors.id_product?.message || ""}
+          error={
+            typeof errors.id_product?.message === "string"
+              ? errors.id_product.message
+              : ""
+          }
           requiredField
         />
         <div className="space-y-2">

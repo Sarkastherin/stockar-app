@@ -6,10 +6,12 @@ export const useConfigItemsProd = () => {
     subcategorias,
     categorias,
     familias,
+    ubicaciones,
     unidades,
     getSubcategorias,
     getCategorias,
     getFamilias,
+    getUbicaciones,
     getUnidades,
   } = useDataContext();
 
@@ -17,16 +19,19 @@ export const useConfigItemsProd = () => {
     if (!subcategorias) getSubcategorias();
     if (!categorias) getCategorias();
     if (!familias) getFamilias();
+    if (!ubicaciones) getUbicaciones();
     if (!unidades) getUnidades();
   }, [
     subcategorias,
     categorias,
     familias,
+    ubicaciones,
     unidades,
     getSubcategorias,
     getCategorias,
     getFamilias,
     getUnidades,
+    getUbicaciones,
   ]);
 
   useEffect(() => {
@@ -82,34 +87,12 @@ export const useConfigItemsProd = () => {
         })) || [],
     [subcategorias],
   );
-  
-  // Opciones filtradas por familia y categoría
-  /* const categoriasFiltradasOptions = useMemo(
-    () =>
-      categorias
-        ?.filter((cat) => cat.id_family === familiaId)
-        .map((cat) => ({
-          value: cat.id,
-          label: cat.name,
-        })) || [],
-    [categorias, familiaId],
-  ); */
-
-  /* const subcategoriasFiltradasOptions = useMemo(
-    () =>
-      subcategorias
-        ?.filter((sub) => sub.id_category === categoriaId)
-        .map((sub) => ({
-          value: sub.id,
-          label: sub.name,
-        })) || [],
-    [subcategorias, categoriaId],
-  ); */
   return {
     subcategorias,
     categorias,
     familias,
     unidades,
+    ubicaciones,
     familiasOptions,
     unidadesOptions,
     categoriasOptions,

@@ -1,4 +1,4 @@
-import type { MovimientoConDetalles } from "~/types/movimientos";
+import type { MovimientoDB } from "~/types/movimientos";
 import { useForm } from "react-hook-form";
 import { useDataContext } from "~/context/DataContext";
 import { useModal } from "~/context/ModalContext";
@@ -11,17 +11,27 @@ export const useMovimientos = () => {
     reactivateMovimiento,
   } = useDataContext();
   const { setMessageForm, setStepForm } = useModal();
-  const form = useForm<MovimientoConDetalles>({
+  const form = useForm<MovimientoDB>({
     defaultValues: {},
   });
-  const onCreate = async (data: MovimientoConDetalles) => {
-    const { id_product, qty, type, note, reference } = data;
+  const onCreate = async (data: MovimientoDB) => {
+    const {
+      id_product,
+      qty,
+      type,
+      note,
+      reference,
+      id_origin,
+      id_destination,
+    } = data;
     const result = await createMovimiento({
       id_product,
       qty,
       type,
       note,
       reference,
+      id_origin: id_origin || null,
+      id_destination: id_destination || null,
     });
     if (result.error) {
       setMessageForm(result.error.message || "Error al crear el movimiento");
@@ -31,11 +41,11 @@ export const useMovimientos = () => {
     setMessageForm("Movimiento creado exitosamente");
     setStepForm("success");
   };
-  const onUpdate = async (data: MovimientoConDetalles) => {
+  const onUpdate = async (data: MovimientoDB) => {
     const { reference, note } = data;
     const payload = prepareUpdatePayload({
       dirtyFields: form.formState.dirtyFields,
-      formData: { reference, note } as MovimientoConDetalles,
+      formData: { reference, note } as MovimientoDB,
     });
     const result = await updateMovimiento(data.id, payload);
     if (result.error) {

@@ -1,28 +1,28 @@
 import type { Route } from "../+types/home";
 import Table from "~/components/Table";
+import type { PaginationMeta } from "~/services/crudFactory";
 import type { TableColumn } from "react-data-table-component";
 import { useDataContext } from "~/context/DataContext";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Spinner } from "flowbite-react";
 import { SubTitles } from "~/components/SubTitles";
 import { LuArrowUpDown } from "react-icons/lu";
 import { useModal } from "~/context/ModalContext";
 import { MovimientoModal } from "~/components/modals/customs/ShowMovimientoModal";
 import { useMovimientos } from "~/hooks/useMovimientos";
-import {
-  tiposMovimiento,
-  type MovimientoConDetalles,
-} from "~/types/movimientos";
-import { NewMovimientoModal } from "~/components/modals/customs/NewMovimientoModal";
-import { commonProps } from "~/types/commonsTypes";
+import { tiposMovimiento, type MovimientoDB } from "~/types/movimientos";
 import { Badge } from "flowbite-react";
+import { useMovementsServices } from "~/services/useCrud";
+import { useNavigate } from "react-router";
+
+const MOVEMENTS_PER_PAGE = 15;
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "Movimientos" },
     { name: "description", content: "Gestión de movimientos de productos" },
   ];
 }
-const columns: TableColumn<MovimientoConDetalles>[] = [
+const columns: TableColumn<MovimientoDB>[] = [
   {
     name: "Fecha",
     selector: (row) =>
@@ -36,7 +36,7 @@ const columns: TableColumn<MovimientoConDetalles>[] = [
     sortable: true,
     width: "180px",
   },
-  { name: "Nombre", selector: (row) => row.name_product, sortable: true },
+  { name: "Nombre", selector: (row) => row.product_name || "-", sortable: true },
   {
     name: "Tipo",
     cell: (row) => (
@@ -79,56 +79,128 @@ const columns: TableColumn<MovimientoConDetalles>[] = [
 ];
 
 export default function Movimientos() {
+  const navigate = useNavigate();
   const { openModal } = useModal();
+  const movementsServices = useMovementsServices();
 
-  const { form, onUpdate, onCreate, onDelete, onReactivate } = useMovimientos();
-  const { movimientosConDetalles, getMovimientosConDetalles } =
-    useDataContext();
+  const { form, onUpdate, onDelete, onReactivate } = useMovimientos();
+  const { productos, getProductos } = useDataContext();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [movimientosPage, setMovimientosPage] = useState<MovimientoDB[] | null>(
+    null,
+  );
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const productosOptions = useMemo(
+    () =>
+      (productos ?? []).map((producto) => ({
+        value: producto.id,
+        label: producto.name,
+      })),
+    [productos],
+  );
+
   useEffect(() => {
-    if (!movimientosConDetalles) getMovimientosConDetalles();
-  }, [movimientosConDetalles, getMovimientosConDetalles]);
+    if (!productos) {
+      getProductos();
+    }
+  }, [productos, getProductos]);
 
-  function handleRowClick(row: MovimientoConDetalles) {
+  const loadMovimientosPage = useCallback(async () => {
+    setIsLoading(true);
+    const offset = (currentPage - 1) * MOVEMENTS_PER_PAGE;
+    const result = await movementsServices.read({
+      limit: MOVEMENTS_PER_PAGE,
+      offset,
+      query: filters,
+    });
+
+    if (result.error) {
+      console.error("Error paginating movements:", result.error);
+      setMovimientosPage([]);
+      setPagination(null);
+      setIsLoading(false);
+      return;
+    }
+
+    setMovimientosPage(result.data ?? []);
+    setPagination(result.pagination);
+    setIsLoading(false);
+  }, [currentPage, filters, movementsServices]);
+
+  useEffect(() => {
+    loadMovimientosPage();
+  }, [loadMovimientosPage]);
+
+  const handleUpdate = async (data: MovimientoDB) => {
+    await onUpdate(data);
+    await loadMovimientosPage();
+  };
+
+  const handleDelete = async (id: string) => {
+    await onDelete(id);
+    await loadMovimientosPage();
+  };
+
+  const handleReactivate = async (id: string) => {
+    await onReactivate(id);
+    await loadMovimientosPage();
+  };
+
+  const handleServerFilterChange = useCallback(
+    (nextFilters: Record<string, string>) => {
+      setCurrentPage((prevPage) => (prevPage === 1 ? prevPage : 1));
+      setFilters((prevFilters) => {
+        const prevSerialized = JSON.stringify(prevFilters);
+        const nextSerialized = JSON.stringify(nextFilters);
+        return prevSerialized === nextSerialized ? prevFilters : nextFilters;
+      });
+    },
+    [],
+  );
+
+  const serverPagination = useMemo(
+    () => ({
+      totalRows: pagination?.total ?? movimientosPage?.length ?? 0,
+      currentPage,
+      rowsPerPage: pagination?.limit ?? MOVEMENTS_PER_PAGE,
+      onPageChange: setCurrentPage,
+    }),
+    [
+      pagination?.total,
+      pagination?.limit,
+      movimientosPage?.length,
+      currentPage,
+    ],
+  );
+
+  const serverFiltering = useMemo(
+    () => ({
+      onFilterChange: handleServerFilterChange,
+    }),
+    [handleServerFilterChange],
+  );
+
+  function handleRowClick(row: MovimientoDB) {
     const newForm = form;
     newForm.reset(row);
     openModal("form", {
       component: MovimientoModal,
       props: {
         form: newForm,
-        title: "Consultar movimiento: " + row.name_product,
-        onDelete: () => onDelete(row.id),
-        onReactivate: () => onReactivate(row.id),
+        title: "Consultar movimiento: " + row.product_name,
+        onDelete: () => handleDelete(row.id),
+        onReactivate: () => handleReactivate(row.id),
       },
-      onSubmit: form.handleSubmit(onUpdate),
+      onSubmit: form.handleSubmit(handleUpdate),
     });
   }
-  function handleNewMovement() {
-    const newForm = form;
-    newForm.reset({
-      ...commonProps,
-      active: true,
-      type: "",
-      id_product: "",
-      qty: 0,
-      note: "",
-      reference: "",
-      name_product: "",
-      voided_at: "",
-      voided_by: "",
-      void_reason: "",
-    });
-    openModal("form", {
-      component: NewMovimientoModal,
-      props: {
-        form: newForm,
-        title: "Nuevo movimiento",
-      },
-      onSubmit: form.handleSubmit(onCreate),
-    });
+  const isInitialLoading = isLoading && !movimientosPage;
+  const tableData = movimientosPage ?? [];
 
-    // Crear un nuevo formulario vacío para un nuevo movimiento
-  }
-  if (!movimientosConDetalles) {
+  if (isInitialLoading) {
     return (
       <div className="flex justify-center items-center">
         <Spinner aria-label="Cargando movimientos..." />
@@ -147,17 +219,25 @@ export default function Movimientos() {
       />
       <Table
         columns={columns}
-        data={movimientosConDetalles}
+        data={tableData}
         onRowClick={handleRowClick}
         inactiveField="active"
         btnOnClick={{
           title: "Nuevo movimiento",
-          onClick: handleNewMovement,
+          onClick: () => navigate("/movimientos/nuevo"),
           color: "indigo",
         }}
+        serverPagination={serverPagination}
+        serverFiltering={serverFiltering}
         scrollHeightOffset={410}
         filterFields={[
-          { key: "name_product", label: "Producto" },
+          {
+            key: "id_product",
+            label: "Producto",
+            type: "select",
+            options: productosOptions,
+            emptyOption: "Todos",
+          },
           {
             key: "type",
             label: "Tipo",
@@ -166,6 +246,7 @@ export default function Movimientos() {
               label: tipo.label,
               value: tipo.value,
             })),
+            emptyOption: "Todos",
           },
           { key: "created_at", label: "Fecha", type: "dateRange" },
         ]}

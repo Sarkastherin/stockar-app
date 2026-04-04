@@ -3,7 +3,6 @@ import { Modal } from "./ModalBase";
 import { Alert, Button, ModalBody, ModalHeader } from "flowbite-react";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 export type ModalType = "custom" | "form" | "confirmation";
-import { Modal as FlowbiteModal } from "flowbite-react";
 export default function ModalManager() {
   const { modal, messageForm, closeModal, stepForm } = useModal();
   if (!modal.type) return null;
@@ -13,7 +12,7 @@ export default function ModalManager() {
       const CustomComponent = customProps.component;
       if (!CustomComponent) return null;
       return (
-        <Modal open={true} title={customProps.props.title}>
+        <Modal open={true} title={customProps.title}>
           <CustomComponent {...customProps} />
         </Modal>
       );

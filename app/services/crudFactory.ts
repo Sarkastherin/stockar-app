@@ -10,12 +10,18 @@ type AuditFields = {
   updated_by?: string;
 };
 
-type PaginationMeta = {
+export type PaginationMeta = {
   total: number;
   limit: number;
   offset: number;
   count: number;
   hasNextPage: boolean;
+};
+
+export type ReadListParams = {
+  limit?: number;
+  offset?: number;
+  query?: Record<string, string | number | boolean | null | undefined>;
 };
 
 type ApiEnvelope<T> = {
@@ -57,7 +63,7 @@ export type ListServiceResult<T> = {
 };
 
 export type CrudService<T> = {
-  read: () => Promise<ListServiceResult<T>>;
+  read: (params?: ReadListParams) => Promise<ListServiceResult<T>>;
   insert: (data: CreatePayload<T>) => Promise<ServiceResult<T>>;
   insertMany: (data: CreatePayload<T>[]) => Promise<ServiceResult<T[]>>;
   update: (id: string, data: UpdatePayload<T>) => Promise<ServiceResult<T>>;
@@ -101,13 +107,39 @@ const extractTablePayload = <T>(
   return payload as T;
 };
 
+const buildUrl = (baseUrl: string, params?: ReadListParams) => {
+  if (!params) return baseUrl;
+
+  const searchParams = new URLSearchParams();
+
+  if (typeof params.limit === "number") {
+    searchParams.set("limit", params.limit.toString());
+  }
+
+  if (typeof params.offset === "number") {
+    searchParams.set("offset", params.offset.toString());
+  }
+
+  Object.entries(params.query ?? {}).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "") {
+      return;
+    }
+
+    searchParams.set(key, String(value));
+  });
+
+  const queryString = searchParams.toString();
+  return queryString ? `${baseUrl}?${queryString}` : baseUrl;
+};
+
 export const createCrud = <T>(
   table: string,
   fetchWithAuth: AuthContextType["fetchWithAuth"],
 ): CrudService<T> => {
   return {
-    read: async () => {
-      const url = `${API_BASE_URL}${table}`;
+    read: async (params) => {
+      const baseUrl = `${API_BASE_URL}${table}`;
+      const url = buildUrl(baseUrl, params);
       try {
         const response = await fetchWithAuth(url);
         if (!response.ok) {

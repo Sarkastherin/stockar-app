@@ -169,13 +169,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
   const changePassword = useCallback(
     async (id: string, password: string) => {
-      const url = `${API_BASE_URL}users/${id}`;
-      const res = await fetch(url, {
+      const url = resolveUrl(`/users/${id}`) as string;
+      const res = await fetchWithAuth(url, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({password, force_password_change: false }),
+        body: JSON.stringify({ password, force_password_change: false }),
       });
       const result = await res.json();
+      console.log("Change password result:", result);
       if (!res.ok) throw new Error(result.message || "Change password failed");
       // Refrescar datos del usuario después de cambiar la contraseña
       try {
@@ -185,7 +186,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         // noop
       }
     },
-    [],
+    [fetchWithAuth, me],
   );
   useEffect(() => {
     let mounted = true;

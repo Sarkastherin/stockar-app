@@ -1,25 +1,28 @@
 import type { Route } from "../+types/home";
 import Table from "~/components/Table";
-import type { StockItem } from "~/types/productos";
+import type { PaginationMeta } from "~/services/crudFactory";
+import type { StockListItem } from "~/types/productos";
 import type { TableColumn } from "react-data-table-component";
-import { useDataContext } from "~/context/DataContext";
-import { useEffect } from "react";
-import { Badge, Spinner } from "flowbite-react";
+import { Spinner } from "flowbite-react";
 import { SubTitles } from "~/components/SubTitles";
 import { useModal } from "~/context/ModalContext";
 import { AjusteStockModal } from "~/components/modals/customs/AjusteStockModal";
 import { useMovimientos } from "~/hooks/useMovimientos";
 import { AiOutlineStock } from "react-icons/ai";
-import { tiposMovimiento } from "~/types/movimientos";
 import { useConfigItemsProd } from "~/hooks/useConfigItemsProd";
 import { commonProps } from "~/types/commonsTypes";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useStockServices } from "~/services/useCrud";
+import type { MovimientoDB } from "~/types/movimientos";
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "Stock" },
     { name: "description", content: "Gestión de Stock" },
   ];
 }
-const columns: TableColumn<StockItem>[] = [
+const STOCK_PER_PAGE = 15;
+
+const columns: TableColumn<StockListItem>[] = [
   { name: "Nombre", selector: (row) => row.name, sortable: true },
   {
     name: "Subcategoria",
@@ -41,28 +44,101 @@ const columns: TableColumn<StockItem>[] = [
 
 export default function Stock() {
   const { openModal } = useModal();
+  const stockServices = useStockServices();
   const {
     categoriasOptions,
     subcategoriaOptions,
     familiasOptions,
     unidadesOptions,
+    ubicaciones,
   } = useConfigItemsProd();
+  const locationOptions = useMemo(
+    () =>
+      (ubicaciones ?? [])
+        .filter((u) => u.active)
+        .map((u) => ({ value: u.id, label: u.name })),
+    [ubicaciones],
+  );
   const { form, onCreate } = useMovimientos();
-  const { stockItems, getStockItems } = useDataContext();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [stockPage, setStockPage] = useState<StockListItem[] | null>(null);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadStockPage = useCallback(async () => {
+    setIsLoading(true);
+    const offset = (currentPage - 1) * STOCK_PER_PAGE;
+    const result = await stockServices.read({
+      limit: STOCK_PER_PAGE,
+      offset,
+      query: filters,
+    });
+
+    if (result.error) {
+      console.error("Error paginating stock:", result.error);
+      setStockPage([]);
+      setPagination(null);
+      setIsLoading(false);
+      return;
+    }
+
+    setStockPage(result.data ?? []);
+    setPagination(result.pagination);
+    setIsLoading(false);
+  }, [currentPage, filters, stockServices]);
+
+  const handleServerFilterChange = useCallback(
+    (nextFilters: Record<string, string>) => {
+      setCurrentPage((prevPage) => (prevPage === 1 ? prevPage : 1));
+      setFilters((prevFilters) => {
+        const prevSerialized = JSON.stringify(prevFilters);
+        const nextSerialized = JSON.stringify(nextFilters);
+        return prevSerialized === nextSerialized ? prevFilters : nextFilters;
+      });
+    },
+    [],
+  );
+
+  const serverPagination = useMemo(
+    () => ({
+      totalRows: pagination?.total ?? stockPage?.length ?? 0,
+      currentPage,
+      rowsPerPage: pagination?.limit ?? STOCK_PER_PAGE,
+      onPageChange: setCurrentPage,
+    }),
+    [pagination?.total, pagination?.limit, stockPage?.length, currentPage],
+  );
+
+  const serverFiltering = useMemo(
+    () => ({
+      onFilterChange: handleServerFilterChange,
+    }),
+    [handleServerFilterChange],
+  );
+
   useEffect(() => {
-    if (!stockItems) getStockItems();
-  }, [stockItems, getStockItems]);
-  function handleRowClick(row: StockItem) {
+    void loadStockPage();
+  }, [loadStockPage]);
+
+  async function handleCreateAdjustment(data: MovimientoDB) {
+    await onCreate(data);
+    await loadStockPage();
+  }
+
+  function handleRowClick(row: StockListItem) {
     // Crear un nuevo formulario para este producto
     const newForm = form;
     newForm.reset({
       ...commonProps,
       type: "",
       id_product: row.id,
-      name_product: row.name,
+      product_name: row.name,
       qty: row.stock,
       note: "",
       reference: "",
+      id_origin: "",
+      id_destination: "",
     });
     openModal("form", {
       component: AjusteStockModal,
@@ -70,89 +146,16 @@ export default function Stock() {
         form: newForm,
         title: "Ajustar stock de: " + row.name,
         stockActual: row.stock,
+        locationOptions,
       },
-      onSubmit: form.handleSubmit(onCreate),
+      onSubmit: form.handleSubmit(handleCreateAdjustment),
     });
   }
-  const ExpandableComponent = ({ data }: { data: StockItem }) => {
-    return (
-      <div className="p-4 bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-lg">
-        <div className="mb-3 flex items-center justify-between">
-          <h4 className="font-semibold text-gray-800 dark:text-gray-200">
-            Movimientos
-          </h4>
-          <Badge color="gray">{data.movimientos.length}</Badge>
-        </div>
-        {data.movimientos.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            No hay movimientos para este producto.
-          </p>
-        ) : (
-          <div className="overflow-x-auto rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-            <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
-              <thead className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200">
-                <tr>
-                  <th className="p-2.5 font-semibold">Fecha</th>
-                  <th className="p-2.5 font-semibold">Tipo</th>
-                  <th className="p-2.5 font-semibold">Referencia</th>
-                  <th className="p-2.5 font-semibold">Nota</th>
-                  <th className="p-2.5 font-semibold text-right">Cantidad</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.movimientos.map((movimiento, index) => {
-                  const tipo = tiposMovimiento.find(
-                    (item) => item.value === movimiento.type,
-                  );
-                  return (
-                    <tr
-                      key={movimiento.id}
-                      className={`${
-                        index % 2 === 0
-                          ? "bg-white dark:bg-gray-900"
-                          : "bg-gray-50 dark:bg-gray-800/50"
-                      } hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors`}
-                    >
-                      <td className="border-t border-gray-200 dark:border-gray-700 p-2.5 whitespace-nowrap">
-                        {new Date(movimiento.created_at).toLocaleString(
-                          "es-ES",
-                          {
-                            year: "numeric",
-                            month: "2-digit",
-                            day: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          },
-                        )}
-                      </td>
-                      <td className="border-t border-gray-200 dark:border-gray-700 p-2.5">
-                        <Badge color={tipo?.type || "gray"}>
-                          {tipo?.label || "-"}
-                        </Badge>
-                      </td>
-                      <td className="border-t border-gray-200 dark:border-gray-700 p-2.5 font-medium text-gray-700 dark:text-gray-200">
-                        {movimiento.reference || "-"}
-                      </td>
-                      <td
-                        className="border-t border-gray-200 dark:border-gray-700 p-2.5 max-w-xs truncate"
-                        title={movimiento.note || "-"}
-                      >
-                        {movimiento.note || "-"}
-                      </td>
-                      <td className="border-t border-gray-200 dark:border-gray-700 p-2.5 text-right font-semibold text-gray-800 dark:text-gray-100">
-                        {movimiento.qty}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    );
-  };
-  if (!stockItems) {
+
+  const isInitialLoading = isLoading && !stockPage;
+  const tableData = stockPage ?? [];
+
+  if (isInitialLoading) {
     return (
       <div className="flex justify-center items-center">
         <Spinner aria-label="Cargando productos..." />
@@ -171,11 +174,12 @@ export default function Stock() {
       />
       <Table
         columns={columns}
-        data={stockItems.filter((item) => item.stock > 0)} // Filtrar productos sin stock calculado
+        data={tableData}
+        inactiveField="active"
         onRowClick={handleRowClick}
         scrollHeightOffset={370}
-        expandableRows
-        ExpandedComponent={ExpandableComponent}
+        serverPagination={serverPagination}
+        serverFiltering={serverFiltering}
         filterFields={[
           { key: "name", label: "Producto" },
           {
@@ -206,6 +210,19 @@ export default function Stock() {
             options: unidadesOptions,
             emptyOption: "Todas",
           },
+          {
+            key: "has_stock",
+            label: "Disponibilidad",
+            type: "select",
+            options: [
+              { value: "true", label: "Con stock" },
+              { value: "false", label: "Sin stock" },
+            ],
+            emptyOption: "Todas",
+          },
+          /* { key: "stock_min", label: "Stock minimo" },
+          { key: "stock_max", label: "Stock maximo" }, */
+          { key: "created_at", label: "Fecha alta", type: "dateRange" },
         ]}
         btnExport={{
           filename: "stock",

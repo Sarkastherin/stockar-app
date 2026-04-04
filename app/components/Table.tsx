@@ -166,6 +166,15 @@ type TableProps<T> = {
     actionLabel?: string;
     onAction?: () => void;
   };
+  serverPagination?: {
+    totalRows: number;
+    currentPage: number;
+    rowsPerPage: number;
+    onPageChange: (page: number) => void;
+  };
+  serverFiltering?: {
+    onFilterChange: (filters: Record<string, string>) => void;
+  };
   scrollHeightOffset?: number; // Offset para calcular la altura del scroll (ej: altura de header, footer, etc.)
 };
 type CurrentSort = {
@@ -190,6 +199,8 @@ export default function Table<T>({
   btnNavigate,
   btnOnClick,
   emptyState,
+  serverPagination,
+  serverFiltering,
   scrollHeightOffset,
   expandableRows = false,
   ExpandedComponent,
@@ -200,6 +211,9 @@ export default function Table<T>({
   const isDarkMode = computedMode === "dark";
   const tableTheme = isDarkMode ? "flowbite-dark" : "flowbite-light";
   const customStyles = useMemo(() => getCustomStyles(isDarkMode), [isDarkMode]);
+  const isServerFiltering = Boolean(serverFiltering);
+  const isServerPagination = Boolean(serverPagination);
+  const onServerFilterChange = serverFiltering?.onFilterChange;
   const storageKey =
     alternativeStorageKey || `tableFilters_${location.pathname}`;
   const { openModal, closeModal } = useModal();
@@ -304,7 +318,28 @@ export default function Table<T>({
   function removeAccents(str: string) {
     return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   }
+
+  const getServerFilters = (newFilters: Record<string, string>) => {
+    if (!isServerFiltering) {
+      return newFilters;
+    }
+
+    const nextFilters = { ...newFilters };
+
+    if (inactiveField === "active" && !showInactive) {
+      nextFilters.active = "true";
+    }
+
+    return nextFilters;
+  };
+
   const onFilter = (newFilters: Record<string, string>) => {
+    if (isServerFiltering) {
+      setShowFilterInfo(Object.values(newFilters).some((v) => v));
+      onServerFilterChange?.(getServerFilters(newFilters));
+      return;
+    }
+
     const result = data.filter((item) =>
       filterFields.every(({ key, type }) => {
         if (type === "dateRange") {
@@ -344,14 +379,16 @@ export default function Table<T>({
     // Resetear a la primera página cuando se aplican filtros
     setCurrentPage(1);
     localStorage.setItem(`${storageKey}_page`, "1");
+    serverPagination?.onPageChange(1);
 
     // Si NO es manual (por defecto es automático), aplicar filtro inmediatamente
-    if (!manual) onFilter(updated);
+    if (!manual && !isServerFiltering) onFilter(updated);
   };
   // Función para manejar el cambio de página
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     localStorage.setItem(`${storageKey}_page`, page.toString());
+    serverPagination?.onPageChange(page);
   };
   const handleSortChange = (
     column: TableColumn<T>,
@@ -364,11 +401,22 @@ export default function Table<T>({
     );
   };
   useEffect(() => {
+    if (isServerFiltering) {
+      setShowFilterInfo(Object.values(filters).some((v) => v));
+      if (onFilteredChange) onFilteredChange(data);
+      return;
+    }
+
     setFilteredData(data);
     setShowFilterInfo(Object.values(filters).some((v) => v));
     if (onFilteredChange) onFilteredChange(data);
-  }, [data]);
+  }, [data, isServerFiltering, filters, onFilteredChange]);
   useEffect(() => {
+    if (isServerFiltering) {
+      setShowFilterInfo(Object.values(filters).some((v) => v));
+      return;
+    }
+
     // Aplica filtros guardados al montar si existen
     if (Object.values(filters).some((v) => v)) {
       onFilter(filters);
@@ -377,7 +425,14 @@ export default function Table<T>({
       if (onFilteredChange) onFilteredChange(data);
     }
     setShowFilterInfo(Object.values(filters).some((v) => v));
-  }, [data]); // Ejecuta cuando cambia la data
+  }, [data, filters, isServerFiltering, onFilteredChange]); // Ejecuta cuando cambia la data
+  useEffect(() => {
+    if (!isServerFiltering) {
+      return;
+    }
+
+    onFilter(filters);
+  }, [filters, showInactive, isServerFiltering, onServerFilterChange]);
   useEffect(() => {
     const isFilter = Object.values(filters).some((v) => v);
     if (isFilter) {
@@ -394,6 +449,8 @@ export default function Table<T>({
             setFilteredData(data);
             localStorage.removeItem(storageKey);
             localStorage.removeItem(`${storageKey}_page`);
+            setCurrentPage(1);
+            serverPagination?.onPageChange(1);
             setShowFilterInfo(false);
             closeModal();
           },
@@ -403,6 +460,11 @@ export default function Table<T>({
   }, []);
   // Filtrar datos activos/inactivos si existe la columna de estado y el campo active y setear filterData
   useEffect(() => {
+    if (isServerFiltering) {
+      setFilteredData(data);
+      return;
+    }
+
     let filtered = data;
     if (inactiveField) {
       filtered = showInactive
@@ -410,29 +472,38 @@ export default function Table<T>({
         : filtered.filter((row) => !isRowInactive(row));
     }
     setFilteredData(filtered);
-  }, [data, showInactive, inactiveField]);
+  }, [data, showInactive, inactiveField, isServerFiltering]);
+  useEffect(() => {
+    if (!isServerPagination || !serverPagination) {
+      return;
+    }
+    setCurrentPage(serverPagination.currentPage);
+  }, [isServerPagination, serverPagination?.currentPage]);
 
   return (
     <>
-      {inactiveField && (
-        <div className="mb-4 flex items-center gap-2">
-          <ToggleSwitch
-            checked={showInactive}
-            onChange={setShowInactive}
-            label="Mostrar inactivos"
-          />
-        </div>
-      )}
-      {showFilterInfo && filterFields.length > 0 && (
-        <div className="flex justify-between text-sm font-semibold">
-          <div className="text-blue-600 dark:text-blue-400 ">
-            ℹ️ Filtros aplicados.
+      <div className="flex items-center justify-between mb-2">
+        {inactiveField && (
+          <div className="mb-4 flex items-center gap-2">
+            <ToggleSwitch
+              checked={showInactive}
+              onChange={setShowInactive}
+              label="Mostrar inactivos"
+            />
           </div>
-          <div className="bg-zinc-300/50 dark:bg-zinc-700/50 text-zinc-700 dark:text-zinc-300 px-2 rounded">
-            Registros encontrados: {filteredData.length}
+        )}
+        {showFilterInfo && filterFields.length > 0 && (
+          <div className="text-sm font-semibold w-fit">
+            <div className="text-blue-600 dark:text-blue-400 ">
+              ℹ️ Filtros aplicados.
+            </div>
+            <div className="mt-2 bg-zinc-300/50 dark:bg-zinc-700/50 text-zinc-700 dark:text-zinc-300 px-2 rounded">
+              Registros encontrados:{" "}
+              {serverPagination?.totalRows ?? filteredData.length}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
       {filterFields.length > 0 && (
         <form
           className="flex gap-2 md:flex-row flex-col mb-6"
@@ -522,8 +593,10 @@ export default function Table<T>({
           customStyles={customStyles}
           theme={tableTheme}
           pagination
-          paginationPerPage={15}
+          paginationPerPage={serverPagination?.rowsPerPage ?? 15}
           paginationDefaultPage={currentPage}
+          paginationServer={Boolean(serverPagination)}
+          paginationTotalRows={serverPagination?.totalRows}
           onChangePage={handlePageChange}
           onRowClicked={!disableRowClick ? onRowClick : undefined}
           pointerOnHover={!disableRowClick}

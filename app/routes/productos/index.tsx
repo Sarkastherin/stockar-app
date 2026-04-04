@@ -1,9 +1,9 @@
 import type { Route } from "../+types/home";
 import Table from "~/components/Table";
-import type { ProductoConDetalles } from "~/types/productos";
+import type { PaginationMeta } from "~/services/crudFactory";
+import type { ProductoConDetalles, ProductoDB } from "~/types/productos";
 import type { TableColumn } from "react-data-table-component";
-import { useDataContext } from "~/context/DataContext";
-import { useEffect} from "react";
+import { useMemo, useEffect, useState, useCallback } from "react";
 import { Spinner } from "flowbite-react";
 import { SubTitles } from "~/components/SubTitles";
 import { AiOutlineProduct } from "react-icons/ai";
@@ -11,6 +11,9 @@ import { useModal } from "~/context/ModalContext";
 import { ProductosModal } from "~/components/modals/customs/ProductosModal";
 import { useProductos } from "~/hooks/useProductos";
 import { useConfigItemsProd } from "~/hooks/useConfigItemsProd";
+import { useProductsServices } from "~/services/useCrud";
+
+const PRODUCTS_PER_PAGE = 15;
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "StockAR" },
@@ -54,19 +57,132 @@ const columns: TableColumn<ProductoConDetalles>[] = [
 
 export default function Productos() {
   const { openModal } = useModal();
+  const productsServices = useProductsServices();
   const {
+    subcategorias,
+    categorias,
+    familias,
+    unidades,
     categoriasOptions,
     subcategoriaOptions,
     familiasOptions,
     unidadesOptions,
   } = useConfigItemsProd();
   const { form, onCreate, onUpdate, onDelete, onReactivate } = useProductos();
-  const { productosConDetalles, getProductosConDetalles } = useDataContext();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [productosPage, setProductosPage] = useState<ProductoDB[] | null>(null);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadProductosPage = useCallback(async () => {
+    setIsLoading(true);
+    const offset = (currentPage - 1) * PRODUCTS_PER_PAGE;
+    const result = await productsServices.read({
+      limit: PRODUCTS_PER_PAGE,
+      offset,
+      query: filters,
+    });
+
+    if (result.error) {
+      console.error("Error paginating products:", result.error);
+      setProductosPage([]);
+      setPagination(null);
+      setIsLoading(false);
+      return;
+    }
+
+    setProductosPage(result.data ?? []);
+    setPagination(result.pagination);
+    setIsLoading(false);
+  }, [currentPage, filters, productsServices]);
+
   useEffect(() => {
-    if (!productosConDetalles) getProductosConDetalles();
-  }, [productosConDetalles, getProductosConDetalles]);
+    loadProductosPage();
+  }, [loadProductosPage]);
+
+  const productosConDetalles = useMemo(() => {
+    if (!productosPage || !subcategorias || !categorias || !familias || !unidades) {
+      return null;
+    }
+
+    return productosPage
+      .map((producto) => {
+        const unit = unidades.find((u) => u.id === producto.id_unit);
+        const subcategory = subcategorias.find(
+          (s) => s.id === producto.id_subcategory,
+        );
+        const category = subcategory
+          ? categorias.find((c) => c.id === subcategory.id_category)
+          : undefined;
+        const family = category
+          ? familias.find((f) => f.id === category.id_family)
+          : undefined;
+
+        if (!unit || !subcategory || !category || !family) {
+          return null;
+        }
+
+        return {
+          ...producto,
+          name_unit: unit.name,
+          name_subcategory: subcategory.name,
+          name_category: category.name,
+          name_family: family.name,
+          id_category: category.id,
+          id_family: family.id,
+        };
+      })
+      .filter((producto): producto is ProductoConDetalles => producto !== null);
+  }, [productosPage, subcategorias, categorias, familias, unidades]);
+
+  const handleCreate = async (data: ProductoConDetalles) => {
+    await onCreate(data);
+    await loadProductosPage();
+  };
+
+  const handleUpdate = async (data: ProductoConDetalles) => {
+    await onUpdate(data);
+    await loadProductosPage();
+  };
+
+  const handleDelete = async (id: string) => {
+    await onDelete(id);
+    await loadProductosPage();
+  };
+
+  const handleReactivate = async (id: string) => {
+    await onReactivate(id);
+    await loadProductosPage();
+  };
+
+  const handleServerFilterChange = useCallback((nextFilters: Record<string, string>) => {
+    setCurrentPage((prevPage) => (prevPage === 1 ? prevPage : 1));
+    setFilters((prevFilters) => {
+      const prevSerialized = JSON.stringify(prevFilters);
+      const nextSerialized = JSON.stringify(nextFilters);
+      return prevSerialized === nextSerialized ? prevFilters : nextFilters;
+    });
+  }, []);
+
+  const serverPagination = useMemo(
+    () => ({
+      totalRows: pagination?.total ?? productosConDetalles?.length ?? 0,
+      currentPage,
+      rowsPerPage: pagination?.limit ?? PRODUCTS_PER_PAGE,
+      onPageChange: setCurrentPage,
+    }),
+    [pagination?.total, pagination?.limit, productosConDetalles?.length, currentPage],
+  );
+
+  const serverFiltering = useMemo(
+    () => ({
+      onFilterChange: handleServerFilterChange,
+    }),
+    [handleServerFilterChange],
+  );
+
   function handleRowClick(row: ProductoConDetalles) {
-    // Crear un nuevo formulario para este producto
     const newForm = form;
     newForm.reset(row);
     openModal("form", {
@@ -74,10 +190,10 @@ export default function Productos() {
       props: {
         form: newForm,
         title: "Editar producto: " + row.name,
-        onDelete: () => onDelete(row.id),
-        onReactivate: () => onReactivate(row.id),
+        onDelete: () => handleDelete(row.id),
+        onReactivate: () => handleReactivate(row.id),
       },
-      onSubmit: form.handleSubmit(onUpdate),
+      onSubmit: form.handleSubmit(handleUpdate),
     });
   }
   function handleNewProduct() {
@@ -102,10 +218,18 @@ export default function Productos() {
         form: newForm,
         title: "Nuevo producto",
       },
-      onSubmit: form.handleSubmit(onCreate),
+      onSubmit: form.handleSubmit(handleCreate),
     });
   }
-  if (!productosConDetalles) {
+  const isInitialLoading =
+    !subcategorias ||
+    !categorias ||
+    !familias ||
+    !unidades ||
+    (isLoading && !productosConDetalles);
+  const tableData = productosConDetalles ?? [];
+
+  if (isInitialLoading) {
     return (
       <div className="flex justify-center items-center">
         <Spinner aria-label="Cargando productos..." />
@@ -124,7 +248,7 @@ export default function Productos() {
       />
       <Table
         columns={columns}
-        data={productosConDetalles}
+        data={tableData}
         inactiveField="active"
         onRowClick={handleRowClick}
         btnOnClick={{
@@ -132,6 +256,8 @@ export default function Productos() {
           onClick: handleNewProduct,
           color: "indigo",
         }}
+        serverPagination={serverPagination}
+        serverFiltering={serverFiltering}
         scrollHeightOffset={410}
         filterFields={[
           { key: "name", label: "Producto" },

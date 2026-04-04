@@ -8,6 +8,7 @@ import { useConfigItemsProd } from "./useConfigItemsProd";
 import { useDataContext } from "~/context/DataContext";
 import { useForm } from "react-hook-form";
 import { prepareUpdatePayload } from "~/utils/functions";
+import { tiposLocations } from "~/types/productos";
 type ItemConfig<T = any> = {
   tab: TabsTypes;
   name: string;
@@ -28,6 +29,7 @@ const TAB_ORDER: TabsTypes[] = [
   "categorias",
   "subcategorias",
   "unidades",
+  "ubicaciones",
 ];
 
 const TAB_META: Record<TabsTypes, { name: string; singular: string }> = {
@@ -35,6 +37,7 @@ const TAB_META: Record<TabsTypes, { name: string; singular: string }> = {
   categorias: { name: "Categorías", singular: "Categoría" },
   subcategorias: { name: "Subcategorías", singular: "Subcategoría" },
   unidades: { name: "Unidades", singular: "Unidad" },
+  ubicaciones: { name: "Ubicaciones", singular: "Ubicación" },
 };
 
 const createDateColumn = (
@@ -61,6 +64,7 @@ export default function useItemsConfig() {
     categorias,
     familias,
     unidades,
+    ubicaciones,
     familiasOptions,
     categoriasOptions,
   } = useConfigItemsProd();
@@ -77,6 +81,10 @@ export default function useItemsConfig() {
     updateSubcategorias,
     deleteSubcategorias,
     reactivateSubcategorias,
+    createUbicaciones,
+    updateUbicaciones,
+    deleteUbicaciones,
+    reactivateUbicaciones,
     createUnidades,
     updateUnidades,
     deleteUnidades,
@@ -186,6 +194,13 @@ export default function useItemsConfig() {
         reactivateUnidades,
         "Unidad",
       ),
+      ubicaciones: createHandlers(
+        createUbicaciones,
+        updateUbicaciones,
+        deleteUbicaciones,
+        reactivateUbicaciones,
+        "Ubicación",
+      ),
     }),
     [
       createHandlers,
@@ -195,10 +210,20 @@ export default function useItemsConfig() {
       reactivateFamilias,
       createCategorias,
       updateCategorias,
+      deleteCategorias,
+      reactivateCategorias,
       createSubcategorias,
       updateSubcategorias,
+      deleteSubcategorias,
+      reactivateSubcategorias,
       createUnidades,
       updateUnidades,
+      deleteUnidades,
+      reactivateUnidades,
+      createUbicaciones,
+      updateUbicaciones,
+      deleteUbicaciones,
+      reactivateUbicaciones,
     ],
   );
 
@@ -332,6 +357,11 @@ export default function useItemsConfig() {
           required: true,
         },
       ],
+      ubicaciones: [
+        { key: "name", label: "Nombre", type: "text", required: true },
+        {key: "description", label: "Descripción", type: "text", required: false},
+        {key: "type", label: "Tipo", type: "select", options: tiposLocations, required: true},
+      ]
     }),
     [familiasOptions, categoriasOptions, categorias],
   );
@@ -382,6 +412,20 @@ export default function useItemsConfig() {
         createDateColumn("Última actualización", "updated_at"),
          {name: "Estado", selector: (row: any) => (row.active ? "Activo" : "Inactivo"), sortable: true, width: "120px"},
       ],
+      ubicaciones: [
+        createDateColumn("Fecha de creación", "created_at"),
+        { name: "Nombre", selector: (row: any) => row.name, sortable: true },
+        { name: "Descripción", selector: (row: any) => row.description ?? "—", sortable: true },
+        {
+          name: "Tipo",
+          selector: (row: any) =>
+            tiposLocations.find((t) => t.value === row.type)?.label ?? row.type,
+          sortable: true,
+          width: "140px",
+        },
+        createDateColumn("Última actualización", "updated_at"),
+        { name: "Estado", selector: (row: any) => (row.active ? "Activo" : "Inactivo"), sortable: true, width: "120px" },
+      ],
     }),
     [],
   );
@@ -392,12 +436,13 @@ export default function useItemsConfig() {
       categorias: categoriasConFamilia,
       subcategorias: subCategoriasConDetalles,
       unidades: unidades ?? [],
+      ubicaciones: ubicaciones ?? [],
     }),
-    [familias, categoriasConFamilia, subCategoriasConDetalles, unidades],
+    [familias, categoriasConFamilia, subCategoriasConDetalles, unidades, ubicaciones],
   );
 
   const getItemsConfig = (): ItemConfig[] => {
-    if (!familias || !categorias || !subcategorias || !unidades) return [];
+    if (!familias || !categorias || !subcategorias || !unidades || !ubicaciones) return [];
 
     return TAB_ORDER.map((tab) => {
       const fields = fieldsByTab[tab];

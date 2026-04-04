@@ -5,7 +5,7 @@ import Table from "~/components/Table";
 import useItemsConfig from "~/hooks/useItemsConfig";
 import { FaPlus } from "react-icons/fa";
 import { Button } from "flowbite-react";
-import { LuPencilRuler, LuLayers2, LuLayers3, LuNetwork } from "react-icons/lu";
+import { LuPencilRuler, LuLayers2, LuLayers3, LuNetwork, LuMapPin } from "react-icons/lu";
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "Configuraciones de Productos" },
@@ -16,7 +16,9 @@ export type TabsTypes =
   | "familias"
   | "categorias"
   | "subcategorias"
-  | "unidades";
+  | "unidades"
+  | "ubicaciones";
+  
  const submenu = [
     {
       key: "familias" as TabsTypes,
@@ -38,6 +40,11 @@ export type TabsTypes =
       name: "Unidades",
       icon: LuPencilRuler,
     },
+    {
+      key: "ubicaciones" as TabsTypes,
+      name: "Ubicaciones",
+      icon: LuMapPin,
+    }
   ]; //familias, categorias, subcategorias, unidades de medida
 
 export default function ProductosSettings() {
@@ -47,8 +54,8 @@ export default function ProductosSettings() {
   const activeItem = itemsConfig.find((item) => item.tab === activeTab);
   return (
     <div className="flex" style={{ height: "calc(100vh - 128px)" }}>
-      <Sidebar aria-label="Menu de configuraciones de productos" submenu={submenu} activeTab={activeTab} setActiveTab={setActiveTab as (tab: string) => void} />
-      <div className="relative flex-1 p-6">
+      <Sidebar aria-label="Menu de configuraciones de productos" submenu={submenu} activeTab={activeTab} setActiveTab={setActiveTab as (tab: string) => void} collapsible />
+      <div className="relative flex-1 min-w-0 p-6">
         {activeItem && (
           <div key={activeItem.tab}>
             <div className="flex justify-between items-center mb-4">

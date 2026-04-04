@@ -6,7 +6,7 @@ import { useCallback, useEffect } from "react";
 import InfoFormCommons from "~/components/forms/InfoFormCommons";
 import {
   tiposMovimiento,
-  type MovimientoConDetalles,
+  type MovimientoDB,
 } from "~/types/movimientos";
 
 export function MovimientoModal({
@@ -14,7 +14,7 @@ export function MovimientoModal({
 }: {
   props: {
     title: string;
-    form: UseFormReturn<MovimientoConDetalles>;
+    form: UseFormReturn<MovimientoDB>;
     onDelete?: () => void;
     onReactivate?: () => void;
   };
@@ -45,7 +45,7 @@ export function MovimientoModal({
 
   const isLoading = !usuarios;
 
-  const productName = watch("name_product");
+  const productName = watch("product_name");
   if (isLoading) {
     return (
       <div className="flex justify-center items-center">

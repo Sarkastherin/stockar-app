@@ -32,7 +32,11 @@ export type MovimientoDB = CommonPropsDB & {
   voided_at?: string;
   voided_by?: string;
   void_reason?: string;
-};
-export type MovimientoConDetalles = MovimientoDB & {
-  name_product: string;
+  id_origin?: string | null;
+  id_destination?: string | null;
+  product_name?: string;
+  origin_name?: string | null;
+  origin_type?: string | null;
+  destination_name?: string | null;
+  destination_type?: string | null;
 };

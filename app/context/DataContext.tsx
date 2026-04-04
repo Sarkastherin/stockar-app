@@ -5,7 +5,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import type { MovimientoDB, MovimientoConDetalles } from "~/types/movimientos";
+import type { MovimientoDB } from "~/types/movimientos";
 import type {
   ProductoDB,
   ProductoConDetalles,
@@ -14,9 +14,19 @@ import type {
   CategoriaDB,
   FamiliaDB,
   StockItem,
+  UbicacionDB,
 } from "~/types/productos";
 import type { UsuarioDB } from "~/types/usuarios";
-import { useProductsServices, useUnitsServices, useFamiliesServices, useCategoriesServices, useSubcategoriesServices, useMovementsServices, useUserServices } from "~/services/useCrud";
+import {
+  useProductsServices,
+  useUnitsServices,
+  useFamiliesServices,
+  useCategoriesServices,
+  useSubcategoriesServices,
+  useMovementsServices,
+  useUserServices,
+  useLocationsServices,
+} from "~/services/useCrud";
 import type { CrudService, ServiceResult } from "~/services/crudFactory";
 
 type DataContextType = {
@@ -27,15 +37,15 @@ type DataContextType = {
   subcategorias: SubcategoriaDB[] | null;
   categorias: CategoriaDB[] | null;
   familias: FamiliaDB[] | null;
+  ubicaciones: UbicacionDB[] | null;
   unidades: UnidadesDB[] | null;
   productos: ProductoDB[] | null;
   getProductos: () => Promise<ProductoDB[] | null>;
   getSubcategorias: () => Promise<SubcategoriaDB[] | null>;
   getCategorias: () => Promise<CategoriaDB[] | null>;
   getFamilias: () => Promise<FamiliaDB[] | null>;
+  getUbicaciones: () => Promise<UbicacionDB[] | null>;
   getUnidades: () => Promise<UnidadesDB[] | null>;
-  movimientosConDetalles: MovimientoConDetalles[] | null;
-  getMovimientosConDetalles: () => Promise<MovimientoConDetalles[] | null>;
   usuarios: UsuarioDB[] | null;
   getUsuarios: () => Promise<UsuarioDB[] | null>;
   stockItems: StockItem[] | null;
@@ -90,7 +100,7 @@ type DataContextType = {
   createMovimiento: (
     data: Omit<
       MovimientoDB,
-      "id" | "created_at" | "updated_at" | "name_product" | "active"
+      "id" | "created_at" | "updated_at" | "product_name" | "active"
     >,
   ) => Promise<ServiceResult<MovimientoDB>>;
   updateMovimiento: (
@@ -102,7 +112,7 @@ type DataContextType = {
   createManyMovimientos: (
     data: Omit<
       MovimientoDB,
-      "id" | "created_at" | "updated_at" | "name_product" | "active"
+      "id" | "created_at" | "updated_at" | "product_name" | "active"
     >[],
   ) => Promise<ServiceResult<MovimientoDB[]>>;
   createUsuario: (
@@ -114,6 +124,17 @@ type DataContextType = {
   ) => Promise<ServiceResult<UsuarioDB>>;
   deleteUsuario: (id: string) => Promise<ServiceResult<UsuarioDB>>;
   reactivateUsuario: (id: string) => Promise<ServiceResult<UsuarioDB>>;
+  createUbicaciones: (
+    data: Omit<UbicacionDB, "id" | "created_at" | "updated_at" | "active">,
+  ) => Promise<ServiceResult<UbicacionDB>>;
+  updateUbicaciones: (
+    id: string,
+    data: Partial<Omit<UbicacionDB, "id" | "created_at" | "updated_at">>,
+  ) => Promise<ServiceResult<UbicacionDB>>;
+  deleteUbicaciones: (id: string) => Promise<ServiceResult<UbicacionDB>>;
+  reactivateUbicaciones: (id: string) => Promise<ServiceResult<UbicacionDB>>;
+  getMovimientos: () => Promise<MovimientoDB[] | null>;
+  movimientos: MovimientoDB[] | null;
 };
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -128,7 +149,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const subcategoriesServices = useSubcategoriesServices();
   const movementsServices = useMovementsServices();
   const userServices = useUserServices();
-  
+  const locationsServices = useLocationsServices();
   const [productos, setProductos] = useState<ProductoDB[] | null>(null);
   const [unidades, setUnidades] = useState<UnidadesDB[] | null>(null);
   const [subcategorias, setSubcategorias] = useState<SubcategoriaDB[] | null>(
@@ -136,91 +157,102 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   );
   const [categorias, setCategorias] = useState<CategoriaDB[] | null>(null);
   const [familias, setFamilias] = useState<FamiliaDB[] | null>(null);
+  const [ubicaciones, setUbicaciones] = useState<UbicacionDB[] | null>(null);
   const [productosConDetalles, setProductosConDetalles] = useState<
     ProductoConDetalles[] | null
   >(null);
   const [movimientos, setMovimientos] = useState<MovimientoDB[] | null>(null);
   const [movimientosConDetalles, setMovimientosConDetalles] = useState<
-    MovimientoConDetalles[] | null
+    MovimientoDB[] | null
   >(null);
   const [usuarios, setUsuarios] = useState<UsuarioDB[] | null>(null);
 
   const [stockItems, setStockItems] = useState<StockItem[] | null>(null);
   /* GETS */
-  const fetchAndSetData = async <T,>(
-    services: CrudService<T>,
-    setData: React.Dispatch<React.SetStateAction<T[] | null>>,
-  ) => {
-    const { data, error } = await services.read();
-    if (error || !data) {
-      if (error) {
-        console.error("Error fetching data:", error);
+  const fetchAndSetData = useCallback(
+    async <T,>(
+      services: CrudService<T>,
+      setData: React.Dispatch<React.SetStateAction<T[] | null>>,
+    ) => {
+      const { data, error } = await services.read();
+      if (error || !data) {
+        if (error) {
+          console.error("Error fetching data:", error);
+        }
+        return null;
       }
-      return null;
-    }
-    // devolver data ordenada por created_at desc
-    // evaluar si created_at existe en el tipo T
-    let sortData = data;
-    if (data.length > 0 && "created_at" in (data[0] as object)) {
-      sortData = data.sort((a, b) => {
-        const aDate = (a as any)?.created_at;
-        const bDate = (b as any)?.created_at;
-        if (!aDate || !bDate) return 0;
-        return new Date(bDate).getTime() - new Date(aDate).getTime();
-      });
-    }
-    setData(sortData);
-    return sortData;
-  };
-  const getProductos = async () => {
+      // devolver data ordenada por created_at desc
+      // evaluar si created_at existe en el tipo T
+      let sortData = data;
+      if (data.length > 0 && "created_at" in (data[0] as object)) {
+        sortData = data.sort((a, b) => {
+          const aDate = (a as any)?.created_at;
+          const bDate = (b as any)?.created_at;
+          if (!aDate || !bDate) return 0;
+          return new Date(bDate).getTime() - new Date(aDate).getTime();
+        });
+      }
+      setData(sortData);
+      return sortData;
+    },
+    [],
+  );
+  const getProductos = useCallback(async () => {
     const productosData = await fetchAndSetData<ProductoDB>(
       productsServices,
       setProductos,
     );
     return productosData;
-  };
-  const getUnidades = async () => {
+  }, [fetchAndSetData, productsServices]);
+  const getUnidades = useCallback(async () => {
     const unidadesData = await fetchAndSetData<UnidadesDB>(
       unitsServices,
       setUnidades,
     );
     return unidadesData;
-  };
-  const getFamilias = async () => {
+  }, [fetchAndSetData, unitsServices]);
+  const getFamilias = useCallback(async () => {
     const familiasData = await fetchAndSetData<FamiliaDB>(
       familiesServices,
       setFamilias,
     );
     return familiasData;
-  };
-  const getCategorias = async () => {
+  }, [fetchAndSetData, familiesServices]);
+  const getUbicaciones = useCallback(async () => {
+    const ubicacionesData = await fetchAndSetData<UbicacionDB>(
+      locationsServices,
+      setUbicaciones,
+    );
+    return ubicacionesData;
+  }, [fetchAndSetData, locationsServices]);
+  const getCategorias = useCallback(async () => {
     const categoriasData = await fetchAndSetData<CategoriaDB>(
       categoriesServices,
       setCategorias,
     );
     return categoriasData;
-  };
-  const getSubcategorias = async () => {
+  }, [fetchAndSetData, categoriesServices]);
+  const getSubcategorias = useCallback(async () => {
     const subcategoriasData = await fetchAndSetData<SubcategoriaDB>(
       subcategoriesServices,
       setSubcategorias,
     );
     return subcategoriasData;
-  };
-  const getMovimientos = async () => {
+  }, [fetchAndSetData, subcategoriesServices]);
+  const getMovimientos = useCallback(async () => {
     const movimientosData = await fetchAndSetData<MovimientoDB>(
       movementsServices,
       setMovimientos,
     );
     return movimientosData;
-  };
-  const getUsuarios = async () => {
+  }, [fetchAndSetData, movementsServices]);
+  const getUsuarios = useCallback(async () => {
     const usuariosData = await fetchAndSetData<UsuarioDB>(
       userServices,
       setUsuarios,
     );
     return usuariosData;
-  };
+  }, [fetchAndSetData, userServices]);
 
   /* GETS Anidados */
   const getProductosConDetalles = useCallback(async () => {
@@ -304,42 +336,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       .filter((p) => p !== null) as ProductoConDetalles[];
     setProductosConDetalles(productosConDetallesData);
     return productosConDetallesData;
-  }, [productos, unidades, subcategorias, categorias, familias]);
-  const getMovimientosConDetalles = useCallback(async () => {
-    let movimientosData: MovimientoDB[] | null = movimientos;
-    let productosData: ProductoDB[] | null = productos;
-    if (!movimientosData) {
-      movimientosData = await getMovimientos();
-    }
-    if (!productosData) {
-      productosData = await getProductos();
-    }
-    if (!movimientosData || !productosData) {
-      console.error(
-        "Failed to fetch all necessary data for movimientos con detalles",
-      );
-      return null;
-    }
-    const movimientosConDetallesData = movimientosData
-      .map((movimiento) => {
-        const producto = productosData?.find(
-          (p) => p.id === movimiento.id_product,
-        );
-        if (!producto) {
-          console.warn(
-            `⚠️ Movimiento ID: ${movimiento.id} tiene un producto relacionado que no existe (id_product: ${movimiento.id_product})`,
-          );
-          return null;
-        }
-        return {
-          ...movimiento,
-          name_product: producto.name,
-        };
-      })
-      .filter((m) => m !== null) as MovimientoConDetalles[];
-    setMovimientosConDetalles(movimientosConDetallesData);
-    return movimientosConDetallesData;
-  }, [movimientos, productos]);
+  }, [
+    productos,
+    unidades,
+    subcategorias,
+    categorias,
+    familias,
+    getProductos,
+    getUnidades,
+    getSubcategorias,
+    getCategorias,
+    getFamilias,
+  ]);
   const getStockItems = useCallback(async () => {
     let productosConDetallesData: ProductoConDetalles[] | null =
       productosConDetalles;
@@ -374,12 +382,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     );
     setStockItems(stockItemsData);
     return stockItemsData;
-  }, [productosConDetalles, movimientos]);
+  }, [
+    productosConDetalles,
+    movimientos,
+    getProductosConDetalles,
+    getMovimientos,
+  ]);
 
   /* useEffect */
-  useEffect(() => {
-    getMovimientosConDetalles();
-  }, [movimientos, productos]);
   useEffect(() => {
     getStockItems();
   }, [productosConDetalles, movimientos]);
@@ -408,6 +418,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     await getFamilias();
     return response;
   };
+  const createUbicaciones = async (
+    data: Omit<UbicacionDB, "id" | "created_at" | "updated_at" | "active">,
+  ) => {
+    const response = await locationsServices.insert(data);
+    await getUbicaciones();
+    return response;
+  };
   const createCategorias = async (
     data: Omit<CategoriaDB, "id" | "created_at" | "updated_at" | "active">,
   ) => {
@@ -425,7 +442,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const createMovimiento = async (
     data: Omit<
       MovimientoDB,
-      "id" | "created_at" | "updated_at" | "name_product" | "active"
+      "id" | "created_at" | "updated_at" | "product_name" | "active"
     >,
   ) => {
     const response = await movementsServices.insert(data);
@@ -435,7 +452,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const createManyMovimientos = async (
     data: Omit<
       MovimientoDB,
-      "id" | "created_at" | "updated_at" | "name_product" | "active"
+      "id" | "created_at" | "updated_at" | "product_name" | "active"
     >[],
   ) => {
     const response = await movementsServices.insertMany(data);
@@ -465,6 +482,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   ) => {
     const response = await familiesServices.update(id, data);
     await getFamilias();
+    return response;
+  };
+  const updateUbicaciones = async (
+    id: string,
+    data: Partial<Omit<UbicacionDB, "id" | "created_at" | "updated_at">>,
+  ) => {
+    const response = await locationsServices.update(id, data);
+    await getUbicaciones();
     return response;
   };
   const updateCategorias = async (
@@ -502,6 +527,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     await getFamilias();
     return response;
   };
+  const deleteUbicaciones = async (id: string) => {
+    const response = await locationsServices.desactivate(id);
+    await getUbicaciones();
+    return response;
+  };
   const deleteCategorias = async (id: string) => {
     const response = await categoriesServices.desactivate(id);
     await getCategorias();
@@ -533,6 +563,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     await getFamilias();
     return response;
   };
+  const reactivateUbicaciones = async (id: string) => {
+    const response = await locationsServices.update(id, { active: true });
+    await getUbicaciones();
+    return response;
+  };
   const reactivateCategorias = async (id: string) => {
     const response = await categoriesServices.update(id, { active: true });
     await getCategorias();
@@ -558,7 +593,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     data: Omit<UsuarioDB, "id" | "created_at" | "updated_at" | "active">,
   ) => {
     const response = await userServices.insert(data);
-    console.log("Create user response:", response);
     await getUsuarios();
     return response;
   };
@@ -586,19 +620,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         subcategorias,
         categorias,
         familias,
+        ubicaciones,
         unidades,
         usuarios,
         productos,
         stockItems,
         productosConDetalles,
-        movimientosConDetalles,
         getSubcategorias,
         getCategorias,
         getFamilias,
+        getUbicaciones,
         getProductos,
         getProductosConDetalles,
         getUnidades,
-        getMovimientosConDetalles,
         getUsuarios,
         getStockItems,
         createProducto,
@@ -630,6 +664,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         updateUsuario,
         deleteUsuario,
         reactivateUsuario,
+        createUbicaciones,
+        updateUbicaciones,
+        deleteUbicaciones,
+        reactivateUbicaciones,
+        getMovimientos,
+        movimientos,
       }}
     >
       {children}
