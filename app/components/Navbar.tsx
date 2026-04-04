@@ -9,16 +9,7 @@ import { useState } from "react";
 import { NavLink, Link, useNavigate } from "react-router";
 import { Logo } from "./Logo";
 import { useAuth } from "../context/AuthContext";
-
-const menuItems = [
-  { name: "Inicio", to: "/" },
-  { name: "Stock", to: "/stock" },
-  { name: "Productos", to: "/productos" },
-  { name: "Movimientos", to: "/movimientos" },
-  { name: "Configuraciones", to: "/configuraciones" },
-  
-  // Agrega más enlaces aquí según sea necesario
-];
+import { useNavItems } from "~/hooks/useNavItems";
 const NavLinkComponent = ({ children, to }: { children: React.ReactNode; to: string }) => (
   <NavLink
     to={to}
@@ -36,6 +27,7 @@ export function NavBar() {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { navItems } = useNavItems();
 
   const handleLogout = async () => {
     try {
@@ -59,7 +51,7 @@ export function NavBar() {
       </NavbarBrand>
       <NavbarToggle />
       <NavbarCollapse>
-        {menuItems.map((item) => (
+        {navItems.map((item) => (
           <NavLinkComponent key={item.to} to={item.to}>
             {item.name}
           </NavLinkComponent>

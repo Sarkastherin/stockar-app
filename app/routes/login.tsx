@@ -6,12 +6,15 @@ import {
   Label,
   Checkbox,
   Spinner,
+  TextInput,
+  HelperText,
 } from "flowbite-react";
 import { Logo } from "~/components/Logo";
 import type { Route } from "./+types/home";
 import { Link, useNavigate } from "react-router";
 import { Input } from "~/components/forms/InputsForm";
 import { useAuth } from "~/context/AuthContext";
+import { HiEye, HiEyeOff } from "react-icons/hi";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -30,6 +33,7 @@ export default function Login() {
   const { login, user, loading } = useAuth();
   const navigate = useNavigate();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const {
     register,
     handleSubmit,
@@ -104,18 +108,38 @@ export default function Login() {
             })}
             error={errors.email?.message}
           />
-          <Input
-            label="Tu contraseña"
-            type="password"
-            {...register("password", {
-              required: "La contraseña es requerida",
-              minLength: {
-                value: 6,
-                message: "La contraseña debe tener al menos 6 caracteres",
-              },
-            })}
-            error={errors.password?.message}
-          />
+          <div className="w-full">
+            <div className="mb-1 block">
+              <Label>Tu contraseña</Label>
+            </div>
+            <div className="relative">
+              <TextInput
+                type={showPassword ? "text" : "password"}
+                color={errors.password ? "failure" : "gray"}
+                {...register("password", {
+                  required: "La contraseña es requerida",
+                  minLength: {
+                    value: 6,
+                    message: "La contraseña debe tener al menos 6 caracteres",
+                  },
+                })}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                tabIndex={-1}
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              >
+                {showPassword ? <HiEyeOff className="w-5 h-5" /> : <HiEye className="w-5 h-5" />}
+              </button>
+            </div>
+            {errors.password && (
+              <HelperText className="text-red-500 dark:text-red-400">
+                {errors.password.message}
+              </HelperText>
+            )}
+          </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Checkbox id="remember" />

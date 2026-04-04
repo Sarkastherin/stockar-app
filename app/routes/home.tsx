@@ -15,53 +15,25 @@ import { TbTableShortcut } from "react-icons/tb";
 import { useDataContext } from "~/context/DataContext";
 import { useEffect, useMemo, useState } from "react";
 import { getIcon } from "~/components/IconComponent";
-import { FiAlertCircle, FiDownload, FiPackage, FiUpload } from "react-icons/fi";
+import { FiAlertCircle, FiPackage } from "react-icons/fi";
 import { HiOutlineArrowsUpDown } from "react-icons/hi2";
 import { tiposMovimiento } from "~/types/movimientos";
 import { relativeTimeFormat } from "~/utils/functions";
 import { useMovementsServices, useStockServices } from "~/services/useCrud";
+import { useNavItems } from "~/hooks/useNavItems";
+import { useAuth } from "~/context/AuthContext";
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "StockAR" },
     { name: "description", content: "Centro de operaciones de StockAR" },
   ];
 }
-const QuickActionLink = [
-  {
-    name: "Agregar entrada",
-    to: "/movimientos/nuevo?type=entrada",
-    icon: {
-      component: FiDownload,
-      color: "text-green-500 dark:text-green-400",
-      size: 20,
-    },
-    color: "bg-green-200 dark:bg-green-900",
-  },
-  {
-    name: "Agregar salida",
-    to: "/movimientos/nuevo?type=salida",
-    icon: {
-      component: FiUpload,
-      color: "text-red-500 dark:text-red-400",
-      size: 20,
-    },
-    color: "bg-red-200 dark:bg-red-900",
-  },
-  {
-    name: "Ver stock",
-    to: "/stock",
-    icon: {
-      component: FaBoxesStacked,
-      color: "text-blue-500 dark:text-blue-400",
-      size: 20,
-    },
-    color: "bg-blue-200 dark:bg-blue-900",
-  },
-];
+
 export default function Home() {
-  const { movimientos, getMovimientos } =
-    useDataContext();
+  const { movimientos, getMovimientos } = useDataContext();
   const stockServices = useStockServices();
+  const { user } = useAuth();
+  const { quickActions } = useNavItems();
   const [operationalSummary, setOperationalSummary] = useState({
     totalProducts: 0,
     productsInStock: 0,
@@ -152,7 +124,7 @@ export default function Home() {
   return (
     <main className="mt-10">
       <section className="flex gap-6 max-w-6xl mx-auto flex-col md:flex-row">
-        <Card className="flex-2 border-0 shadow-lg bg-linear-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
+        <Card className="hidden md:block flex-2 border-0 shadow-lg bg-linear-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
@@ -208,12 +180,14 @@ export default function Home() {
                 si hace falta.
               </p>
             </div>
-            <NavLink
-              to="/stock"
-              className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
-            >
-              Ver inventario
-            </NavLink>
+            {user?.role !== "USER" && (
+              <NavLink
+                to="/stock"
+                className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+              >
+                Ver inventario
+              </NavLink>
+            )}
           </div>
         </Card>
         <Card className="flex-1">
@@ -222,7 +196,7 @@ export default function Home() {
             <h3 className="font-semibold text-sm">Acciones rápidas</h3>
           </div>
           <div className="flex flex-col gap-3">
-            {QuickActionLink.map((action) => (
+            {quickActions.map((action) => (
               <NavLink
                 key={action.to}
                 to={action.to}
