@@ -14,7 +14,7 @@ import { ModalProvider } from "./context/ModalContext";
 import { AuthProvider } from "./context/AuthContext";
 
 export const links: Route.LinksFunction = () => [
-  { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+  { rel: "icon", href: "/favicon.png", type: "image/png" },
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
     rel: "preconnect",

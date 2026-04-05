@@ -61,6 +61,7 @@ export default function Stock() {
   );
   const { form, onCreate } = useMovimientos();
   const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(STOCK_PER_PAGE);
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [stockPage, setStockPage] = useState<StockListItem[] | null>(null);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
@@ -68,9 +69,9 @@ export default function Stock() {
 
   const loadStockPage = useCallback(async () => {
     setIsLoading(true);
-    const offset = (currentPage - 1) * STOCK_PER_PAGE;
+    const offset = (currentPage - 1) * rowsPerPage;
     const result = await stockServices.read({
-      limit: STOCK_PER_PAGE,
+      limit: rowsPerPage,
       offset,
       query: filters,
     });
@@ -86,7 +87,7 @@ export default function Stock() {
     setStockPage(result.data ?? []);
     setPagination(result.pagination);
     setIsLoading(false);
-  }, [currentPage, filters, stockServices]);
+  }, [currentPage, rowsPerPage, filters, stockServices]);
 
   const handleServerFilterChange = useCallback(
     (nextFilters: Record<string, string>) => {
@@ -104,10 +105,14 @@ export default function Stock() {
     () => ({
       totalRows: pagination?.total ?? stockPage?.length ?? 0,
       currentPage,
-      rowsPerPage: pagination?.limit ?? STOCK_PER_PAGE,
+      rowsPerPage: pagination?.limit ?? rowsPerPage,
       onPageChange: setCurrentPage,
+      onRowsPerPageChange: (newSize: number) => {
+        setRowsPerPage(newSize);
+        setCurrentPage(1);
+      },
     }),
-    [pagination?.total, pagination?.limit, stockPage?.length, currentPage],
+    [pagination?.total, pagination?.limit, stockPage?.length, currentPage, rowsPerPage],
   );
 
   const serverFiltering = useMemo(
@@ -125,6 +130,26 @@ export default function Stock() {
     await onCreate(data);
     await loadStockPage();
   }
+
+  const fetchAllStockForExport = useCallback(async () => {
+    const pageSize = 100;
+    const all: StockListItem[] = [];
+    let offset = 0;
+
+    while (true) {
+      const result = await stockServices.read({
+        limit: pageSize,
+        offset,
+        query: filters,
+      });
+      if (result.error || !result.data?.length) break;
+      all.push(...result.data);
+      if (!result.pagination?.hasNextPage) break;
+      offset += pageSize;
+    }
+
+    return all;
+  }, [filters, stockServices]);
 
   function handleRowClick(row: StockListItem) {
     // Crear un nuevo formulario para este producto
@@ -177,7 +202,7 @@ export default function Stock() {
         data={tableData}
         inactiveField="active"
         onRowClick={handleRowClick}
-        scrollHeightOffset={370}
+        scrollHeightOffset={415}
         serverPagination={serverPagination}
         serverFiltering={serverFiltering}
         filterFields={[
@@ -220,12 +245,10 @@ export default function Stock() {
             ],
             emptyOption: "Todas",
           },
-          /* { key: "stock_min", label: "Stock minimo" },
-          { key: "stock_max", label: "Stock maximo" }, */
-          { key: "created_at", label: "Fecha alta", type: "dateRange" },
         ]}
         btnExport={{
           filename: "stock",
+          fetchAllData: fetchAllStockForExport,
           headers: [
             { label: "Nombre", key: "name", type: "text" },
             { label: "Subcategoria", key: "name_subcategory", type: "text" },

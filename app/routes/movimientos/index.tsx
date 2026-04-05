@@ -59,20 +59,14 @@ const columns: TableColumn<MovimientoDB>[] = [
     width: "120px",
   },
   {
-    name: "Nota",
-    selector: (row) => row.note || "-",
-    sortable: false,
-    width: "200px",
-  },
-  {
-    name: "Referencia",
-    selector: (row) => row.reference || "-",
-    sortable: false,
-    width: "200px",
+    name: "Ubicación",
+    selector: (row) => row.destination_name || "-",
+    sortable: true,
+    width: "150px",
   },
   {
     name: "Estado",
-    selector: (row) => (row.voided_at ? "Anulado" : "Activo"),
+    selector: (row) => row.active,
     sortable: true,
     width: "120px",
   },
@@ -86,21 +80,13 @@ export default function Movimientos() {
   const { form, onUpdate, onDelete, onReactivate } = useMovimientos();
   const { productos, getProductos } = useDataContext();
   const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(MOVEMENTS_PER_PAGE);
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [movimientosPage, setMovimientosPage] = useState<MovimientoDB[] | null>(
     null,
   );
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const productosOptions = useMemo(
-    () =>
-      (productos ?? []).map((producto) => ({
-        value: producto.id,
-        label: producto.name,
-      })),
-    [productos],
-  );
 
   useEffect(() => {
     if (!productos) {
@@ -110,9 +96,9 @@ export default function Movimientos() {
 
   const loadMovimientosPage = useCallback(async () => {
     setIsLoading(true);
-    const offset = (currentPage - 1) * MOVEMENTS_PER_PAGE;
+    const offset = (currentPage - 1) * rowsPerPage;
     const result = await movementsServices.read({
-      limit: MOVEMENTS_PER_PAGE,
+      limit: rowsPerPage,
       offset,
       query: filters,
     });
@@ -128,7 +114,7 @@ export default function Movimientos() {
     setMovimientosPage(result.data ?? []);
     setPagination(result.pagination);
     setIsLoading(false);
-  }, [currentPage, filters, movementsServices]);
+  }, [currentPage, rowsPerPage, filters, movementsServices]);
 
   useEffect(() => {
     loadMovimientosPage();
@@ -160,19 +146,42 @@ export default function Movimientos() {
     },
     [],
   );
+const fetchAllMovimientosForExport = useCallback(async () => {
+    const pageSize = 100;
+    const all: MovimientoDB[] = [];
+    let offset = 0;
 
+    while (true) {
+      const result = await movementsServices.read({
+        limit: pageSize,
+        offset,
+        query: filters,
+      });
+      if (result.error || !result.data?.length) break;
+      all.push(...result.data);
+      if (!result.pagination?.hasNextPage) break;
+      offset += pageSize;
+    }
+
+    return all;
+  }, [filters, movementsServices]);
   const serverPagination = useMemo(
     () => ({
       totalRows: pagination?.total ?? movimientosPage?.length ?? 0,
       currentPage,
-      rowsPerPage: pagination?.limit ?? MOVEMENTS_PER_PAGE,
+      rowsPerPage: pagination?.limit ?? rowsPerPage,
       onPageChange: setCurrentPage,
+      onRowsPerPageChange: (newSize: number) => {
+        setRowsPerPage(newSize);
+        setCurrentPage(1);
+      },
     }),
     [
       pagination?.total,
       pagination?.limit,
       movimientosPage?.length,
       currentPage,
+      rowsPerPage,
     ],
   );
 
@@ -197,6 +206,19 @@ export default function Movimientos() {
       onSubmit: form.handleSubmit(handleUpdate),
     });
   }
+  const ubicacionesOptions = useMemo(() => {
+    const ubicacionesSet = new Set<string>();
+    movimientosPage?.forEach((movimiento) => {
+      if (movimiento.destination_name) {
+        ubicacionesSet.add(movimiento.destination_name);
+      }
+    });
+    return Array.from(ubicacionesSet).map((ubicacion) => ({
+      label: ubicacion,
+      value: ubicacion,
+    }));
+  }, [movimientosPage]);
+
   const isInitialLoading = isLoading && !movimientosPage;
   const tableData = movimientosPage ?? [];
 
@@ -227,17 +249,23 @@ export default function Movimientos() {
           onClick: () => navigate("/movimientos/nuevo"),
           color: "indigo",
         }}
+        btnExport={{
+          filename: "movimientos",
+          fetchAllData: fetchAllMovimientosForExport,
+          headers: [
+            { label: "Fecha", key: "created_at" },
+            { label: "Nombre", key: "product_name" },
+            { label: "Tipo", key: "type" },
+            { label: "Cantidad", key: "qty" },
+            { label: "Ubicación", key: "destination_name" },
+            { label: "Estado", key: "active" },
+          ]
+        }}
         serverPagination={serverPagination}
         serverFiltering={serverFiltering}
         scrollHeightOffset={410}
         filterFields={[
-          {
-            key: "id_product",
-            label: "Producto",
-            type: "select",
-            options: productosOptions,
-            emptyOption: "Todos",
-          },
+          { key: "product_name", label: "Producto" },
           {
             key: "type",
             label: "Tipo",
@@ -247,6 +275,13 @@ export default function Movimientos() {
               value: tipo.value,
             })),
             emptyOption: "Todos",
+          },
+          {
+            key: "destination_name",
+            label: "Ubicación",
+            type: "select",
+            options: ubicacionesOptions,
+            emptyOption: "Todas",
           },
           { key: "created_at", label: "Fecha", type: "dateRange" },
         ]}

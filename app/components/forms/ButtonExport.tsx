@@ -1,38 +1,90 @@
 import { CSVLink } from "react-csv";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { CommonPropTypes } from "react-csv/components/CommonPropTypes";
 import type { Data } from "react-csv/lib/core";
 import { Button } from "flowbite-react";
+import { AiOutlineLoading } from "react-icons/ai";
 
 const formatNumberForCSV = (value: number) => String(value).replace(".", ",");
 
-export const ButtonExport = ({ data, headers, filename }: CommonPropTypes) => {
+function processRows(rows: any[], headers: any[]) {
+  return rows.map((row) => {
+    const newRow = { ...row };
+    headers.forEach((header: any) => {
+      if (header.type === "number" && newRow[header.key] !== undefined) {
+        newRow[header.key] = formatNumberForCSV(Number(newRow[header.key]));
+      }
+    });
+    return newRow;
+  });
+}
+
+export const ButtonExport = ({
+  data,
+  headers,
+  filename,
+  fetchAllData,
+}: CommonPropTypes & { fetchAllData?: () => Promise<any[]> }) => {
   const [separator, setSeparator] = useState<"," | ";">(";");
-  
-  // Procesar datos para formatear números según headers
-  const processedData = Array.isArray(data)
-    ? data.map((row: any) => {
-        const newRow = { ...row };
-        headers?.forEach((header: any) => {
-          if (header.type === "number" && newRow[header.key] !== undefined) {
-            newRow[header.key] = formatNumberForCSV(Number(newRow[header.key]));
-          }
-        });
-        return newRow;
-      })
-    : data;
+  const [asyncData, setAsyncData] = useState<any[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const csvLinkRef = useRef<any>(null);
+
+  const processedData = processRows(
+    Array.isArray(asyncData ?? data) ? (asyncData ?? data as any[]) : [],
+    headers as any[] ?? [],
+  );
+
+  const handleAsyncExport = async () => {
+    if (!fetchAllData) return;
+    setLoading(true);
+    try {
+      const all = await fetchAllData();
+      setAsyncData(all);
+      // Esperar a que React re-renderice con los nuevos datos y luego hacer click
+      setTimeout(() => {
+        csvLinkRef.current?.link?.click();
+        setAsyncData(null);
+      }, 50);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="text-sm inline-flex divide-x divide-gray-300 overflow-hidden rounded-md border border-gray-300 bg-white shadow-sm dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800">
-      {/* Botón Exportar */}
-      <CSVLink
-        data={processedData}
-        headers={headers}
-        separator={separator}
-        filename={filename}
-        className="bg-green-600 text-white px-3 py-1.5 font-medium hover:bg-green-700 transition"
-      >
-        Exportar
-      </CSVLink>
+      {fetchAllData ? (
+        <>
+          <button
+            type="button"
+            onClick={handleAsyncExport}
+            disabled={loading}
+            className="bg-green-600 text-white px-3 py-1.5 font-medium hover:bg-green-700 transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-1"
+          >
+            {loading && <AiOutlineLoading className="animate-spin" />}
+            Exportar
+          </button>
+          {/* CSVLink oculto usado solo para disparo programático */}
+          <CSVLink
+            ref={csvLinkRef}
+            data={processedData}
+            headers={headers}
+            separator={separator}
+            filename={filename as string}
+            className="hidden"
+          />
+        </>
+      ) : (
+        <CSVLink
+          data={processedData}
+          headers={headers}
+          separator={separator}
+          filename={filename as string}
+          className="bg-green-600 text-white px-3 py-1.5 font-medium hover:bg-green-700 transition"
+        >
+          Exportar
+        </CSVLink>
+      )}
       {/* Selector de separador */}
       <div className="relative">
         <select

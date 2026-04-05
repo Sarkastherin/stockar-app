@@ -13,8 +13,8 @@ import { SeleccionarProductoModal } from "~/components/modals/customs/Selecciona
 import { useSearchParams } from "react-router";
 import { useConfigItemsProd } from "~/hooks/useConfigItemsProd";
 import { Select } from "~/components/forms/InputsForm";
-import { tiposLocations } from "~/types/productos";
 import { Input } from "~/components/forms/InputsForm";
+import { useNavigate } from "react-router";
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "Nuevo Movimiento" },
@@ -36,6 +36,7 @@ const movementTypeByQuery: Record<string, "ENTRY" | "EXIT"> = {
 };
 type Step = "form" | "success" | "error";
 export default function NuevoMovimiento() {
+  const navigate = useNavigate();
   const [step, setStep] = useState<{ type: Step; message?: string }>({
     type: "form",
     message: "",
@@ -47,22 +48,12 @@ export default function NuevoMovimiento() {
   const [rowStock, setRowStock] = useState<Record<number, number>>({});
   const { openModal, closeModal } = useModal();
   const { ubicaciones } = useConfigItemsProd();
-  const allLocationOptions = useMemo(
+  const ubicacionOpciones = useMemo(
     () =>
       (ubicaciones ?? []).map((u) => ({
         value: u.id,
-        label: `${u.name} (${tiposLocations.find((t) => t.value === u.type)?.label ?? u.type})`,
+        label: u.name,
       })),
-    [ubicaciones],
-  );
-  const locationOptions = useMemo(
-    () =>
-      (ubicaciones ?? [])
-        .filter((u) => u.type === "WAREHOUSE")
-        .map((u) => ({
-          value: u.id,
-          label: `${u.name} (${tiposLocations.find((t) => t.value === u.type)?.label ?? u.type})`,
-        })),
     [ubicaciones],
   );
   const form = useForm<FormValues>({
@@ -241,48 +232,20 @@ export default function NuevoMovimiento() {
             </HelperText>
           </fieldset>
 
-          {movementType === "ENTRY" && (
-            <fieldset className="mt-4">
-              <Select
-                label="Ubicación"
-                id="id_destination"
-                requiredField
-                emptyOption="Seleccionar ubicación"
-                options={allLocationOptions}
-                error={form.formState.errors.id_destination?.message}
-                {...form.register("id_destination", {
-                  required: "Seleccione una ubicación destino",
-                })}
-              />
-            </fieldset>
-          )}
-
-          {movementType === "EXIT" && (
-            <fieldset className="mt-4 grid grid-cols-2 gap-3">
-              <Select
-                label="Ubicación origen"
-                id="id_origin"
-                requiredField
-                emptyOption="Seleccionar origen"
-                options={locationOptions}
-                error={form.formState.errors.id_origin?.message}
-                {...form.register("id_origin", {
-                  required: "Seleccione una ubicación origen",
-                })}
-              />
-              <Select
-                label="Ubicación destino"
-                id="id_destination"
-                requiredField
-                emptyOption="Seleccionar destino"
-                options={allLocationOptions}
-                error={form.formState.errors.id_destination?.message}
-                {...form.register("id_destination", {
-                  required: "Seleccione una ubicación destino",
-                })}
-              />
-            </fieldset>
-          )}
+          <fieldset className="mt-4">
+            <Select
+              label="Ubicación"
+              id="id_destination"
+              requiredField
+              emptyOption="Seleccionar ubicación"
+              disabledEmptyOption
+              options={ubicacionOpciones}
+              error={form.formState.errors.id_destination?.message}
+              {...form.register("id_destination", {
+                required: "Seleccione una ubicación destino",
+              })}
+            />
+          </fieldset>
           <fieldset className="mt-6 space-y-3">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
               Artículos ({fieldArray.fields.length})
@@ -462,17 +425,21 @@ export default function NuevoMovimiento() {
           <p className="text-gray-700 dark:text-gray-300 mb-6">
             El movimiento ha sido guardado correctamente en el sistema.
           </p>
-          <Button
-            className="self-center"
-            type="button"
-            color="green"
-            onClick={() => {
-              form.reset({ movimientos: [] });
-              setStep({ type: "form" });
-            }}
-          >
-            Registrar otro movimiento
-          </Button>
+          <div className="flex flex-col gap-4 max-w-xs mx-auto">
+            <Button
+              type="button"
+              color="green"
+              onClick={() => {
+                form.reset({ movimientos: [] });
+                setStep({ type: "form" });
+              }}
+            >
+              Registrar otro movimiento
+            </Button>
+            <Button type="button" color="indigo" onClick={() => navigate("/")}>
+              Volver al Inicio
+            </Button>
+          </div>
         </div>
       )}
       {step.type === "error" && (

@@ -150,6 +150,7 @@ type TableProps<T> = {
   btnExport?: {
     filename: string;
     headers: any[];
+    fetchAllData?: () => Promise<any[]>;
   };
   btnNavigate?: {
     route: string;
@@ -171,6 +172,7 @@ type TableProps<T> = {
     currentPage: number;
     rowsPerPage: number;
     onPageChange: (page: number) => void;
+    onRowsPerPageChange?: (rowsPerPage: number) => void;
   };
   serverFiltering?: {
     onFilterChange: (filters: Record<string, string>) => void;
@@ -598,6 +600,10 @@ export default function Table<T>({
           paginationServer={Boolean(serverPagination)}
           paginationTotalRows={serverPagination?.totalRows}
           onChangePage={handlePageChange}
+          onChangeRowsPerPage={(newRowsPerPage, newPage) => {
+            serverPagination?.onRowsPerPageChange?.(newRowsPerPage);
+            serverPagination?.onPageChange(newPage);
+          }}
           onRowClicked={!disableRowClick ? onRowClick : undefined}
           pointerOnHover={!disableRowClick}
           highlightOnHover
@@ -643,6 +649,7 @@ export default function Table<T>({
                 data={filteredData as Data}
                 filename={btnExport.filename}
                 headers={btnExport.headers}
+                fetchAllData={btnExport.fetchAllData}
               />
             )}
 

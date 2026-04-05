@@ -70,6 +70,7 @@ export default function Productos() {
   } = useConfigItemsProd();
   const { form, onCreate, onUpdate, onDelete, onReactivate } = useProductos();
   const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(PRODUCTS_PER_PAGE);
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [productosPage, setProductosPage] = useState<ProductoDB[] | null>(null);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
@@ -77,9 +78,9 @@ export default function Productos() {
 
   const loadProductosPage = useCallback(async () => {
     setIsLoading(true);
-    const offset = (currentPage - 1) * PRODUCTS_PER_PAGE;
+    const offset = (currentPage - 1) * rowsPerPage;
     const result = await productsServices.read({
-      limit: PRODUCTS_PER_PAGE,
+      limit: rowsPerPage,
       offset,
       query: filters,
     });
@@ -95,7 +96,7 @@ export default function Productos() {
     setProductosPage(result.data ?? []);
     setPagination(result.pagination);
     setIsLoading(false);
-  }, [currentPage, filters, productsServices]);
+  }, [currentPage, rowsPerPage, filters, productsServices]);
 
   useEffect(() => {
     loadProductosPage();
@@ -169,10 +170,14 @@ export default function Productos() {
     () => ({
       totalRows: pagination?.total ?? productosConDetalles?.length ?? 0,
       currentPage,
-      rowsPerPage: pagination?.limit ?? PRODUCTS_PER_PAGE,
+      rowsPerPage: pagination?.limit ?? rowsPerPage,
       onPageChange: setCurrentPage,
+      onRowsPerPageChange: (newSize: number) => {
+        setRowsPerPage(newSize);
+        setCurrentPage(1);
+      },
     }),
-    [pagination?.total, pagination?.limit, productosConDetalles?.length, currentPage],
+    [pagination?.total, pagination?.limit, productosConDetalles?.length, currentPage, rowsPerPage],
   );
 
   const serverFiltering = useMemo(

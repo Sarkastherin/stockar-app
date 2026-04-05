@@ -136,7 +136,7 @@ export default function UsuariosSettings() {
     <div>
       <SubTitles
         title="Usuarios"
-        back_path="/"
+        back_path="/configuraciones"
         icon={{
           component: AiOutlineUser,
           color: "text-blue-600 dark:text-blue-400",
