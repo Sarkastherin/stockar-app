@@ -508,7 +508,7 @@ export default function Table<T>({
       </div>
       {filterFields.length > 0 && (
         <form
-          className="flex gap-2 md:flex-row flex-col mb-6"
+          className="flex gap-2 sm:flex-row flex-col mb-6"
           onSubmit={(e) => {
             e.preventDefault();
             onFilter(filters);

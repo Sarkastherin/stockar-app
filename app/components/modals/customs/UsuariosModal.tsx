@@ -4,6 +4,7 @@ import { Button } from "flowbite-react";
 import { useFormState, type UseFormReturn } from "react-hook-form";
 import { useState } from "react";
 import InfoFormCommons from "~/components/forms/InfoFormCommons";
+import { InputShowPassword } from "~/components/forms/InputShowPassword";
 
 export function UsuariosModal({
   props,
@@ -70,27 +71,28 @@ export function UsuariosModal({
         {/* Si no existe createdAt, es creación: muestra los campos */}
         {!createdAt && (
           <>
-            <Input
-              {...register("password", {
-                required: "La contraseña del usuario es obligatoria",
-                minLength: {
-                  value: 8,
-                  message: "La contraseña debe tener al menos 8 caracteres",
-                },
-              })}
-              type="password"
+            <InputShowPassword
+              name="password"
               label="Contraseña"
-              error={errors.password?.message}
+              placeholder="Ingresa tu contraseña"
+              register={register}
+              errors={errors}
+              validation={{
+                required: "La contraseña es obligatoria",
+                minLength: { value: 8, message: "Mínimo 8 caracteres" },
+              }}
             />
-            <Input
-              {...register("confirm_password", {
+            <InputShowPassword
+              name="confirm_password"
+              label="Confirmar contraseña"
+              placeholder="Confirma tu contraseña"
+              register={register}
+              errors={errors}
+              validation={{
                 required: "La confirmación de contraseña es obligatoria",
                 validate: (value) =>
                   value === watch("password") || "Las contraseñas no coinciden",
-              })}
-              type="password"
-              label="Confirmar contraseña"
-              error={errors.confirm_password?.message}
+              }}
             />
           </>
         )}

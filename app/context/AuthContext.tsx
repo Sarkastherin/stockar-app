@@ -6,10 +6,10 @@ import React, {
   useCallback,
 } from "react";
 import { setCrudActorResolver } from "~/services/crudFactory";
+export const MODE_DEV = import.meta.env.MODE === "development";
 
-const API_BASE_URL =
-  (import.meta.env.VITE_API_URL as string) || "http://localhost:3000";
-
+const API_BASE_URL = import.meta.env.MODE === "development" ? import.meta.env.VITE_API_URL_DEV : import.meta.env.VITE_API_URL;
+console.log("Running in development mode:", MODE_DEV, "API_BASE_URL:", API_BASE_URL);
 export interface AuthContextType {
   me: () => Promise<any | null>;
   login: (email: string, password: string) => Promise<void>;
@@ -160,12 +160,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
               // noop
             }
           }
-          return res;
+          if (res.status !== 401) return res;
         }
       }
+      // Si sigue siendo 401, forzar logout y redirigir
+      setUser(null);
+      try {
+        await logout();
+      } catch {}
+      window.location.href = "/login?expired=1";
       return res;
     },
-    [me, tryRefresh],
+    [me, tryRefresh, logout],
   );
   const changePassword = useCallback(
     async (id: string, password: string) => {

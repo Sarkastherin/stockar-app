@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import { Button, Card, Spinner } from "flowbite-react";
 import { Logo } from "~/components/Logo";
 import type { Route } from "./+types/home";
-import { Link, useNavigate } from "react-router";
-import { Input } from "~/components/forms/InputsForm";
+import { useNavigate } from "react-router";
 import { useAuth } from "~/context/AuthContext";
 import { useLocation } from "react-router";
+import { InputShowPassword } from "~/components/forms/InputShowPassword";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -40,7 +40,10 @@ export default function ResetPassword() {
     }
   }, [loading, user, navigate]);
 
-  const onSubmit = async (data: { password: string; confirm_password: string }) => {
+  const onSubmit = async (data: {
+    password: string;
+    confirm_password: string;
+  }) => {
     const { password, confirm_password } = data;
     setSubmitError(null);
     try {
@@ -88,32 +91,35 @@ export default function ResetPassword() {
           </p>
         </div>
         {/* Form */}
-        <h2  className="text-xl text-center font-bold text-indigo-600 dark:text-indigo-400">Cambiar contraseña</h2>
+        <h2 className="text-xl text-center font-bold text-indigo-600 dark:text-indigo-400">
+          Cambiar contraseña
+        </h2>
         <form
           className="flex max-w-md flex-col gap-4 pb-4"
           onSubmit={handleSubmit(onSubmit)}
         >
-          <Input
-            label="Nueva contraseña"
-            type="password"
-            {...register("password", {
-              required: "La contraseña es requerida",
-              minLength: {
-                value: 6,
-                message: "La contraseña debe tener al menos 6 caracteres",
-              },
-            })}
-            error={errors.password?.message}
+          <InputShowPassword
+            name="password"
+            label="Contraseña"
+            placeholder="Ingresa tu contraseña"
+            register={register}
+            errors={errors}
+            validation={{
+              required: "La contraseña es obligatoria",
+              minLength: { value: 8, message: "Mínimo 8 caracteres" },
+            }}
           />
-          <Input
-            label="Confirmar nueva contraseña"
-            type="password"
-            {...register("confirm_password", {
-              required: "La confirmación de la contraseña es requerida",
+          <InputShowPassword
+            name="confirm_password"
+            label="Confirmar contraseña"
+            placeholder="Confirma tu contraseña"
+            register={register}
+            errors={errors}
+            validation={{
+              required: "La confirmación de contraseña es obligatoria",
               validate: (value) =>
                 value === watch("password") || "Las contraseñas no coinciden",
-            })}
-            error={errors.confirm_password?.message}
+            }}
           />
 
           <Button className="mt-2" color="indigo" type="submit">
@@ -125,7 +131,6 @@ export default function ResetPassword() {
             </p>
           )}
         </form>
-        
       </Card>
     </div>
   );

@@ -24,21 +24,12 @@ const STOCK_PER_PAGE = 15;
 
 const columns: TableColumn<StockListItem>[] = [
   { name: "Nombre", selector: (row) => row.name, sortable: true },
-  {
-    name: "Subcategoria",
-    selector: (row) => row.name_subcategory,
-    sortable: true,
-  },
-  { name: "Categoria", selector: (row) => row.name_category, sortable: true },
-
-  { name: "Familia", selector: (row) => row.name_family, sortable: true },
-  { name: "Unidad", selector: (row) => row.name_unit, sortable: true },
+  { name: "Unidad", selector: (row) => row.name_unit, sortable: true, width: "120px" },
   {
     name: "Stock",
     selector: (row) => Number(row.stock).toFixed(2),
     sortable: true,
     width: "120px",
-    right: true,
   },
 ];
 
@@ -112,7 +103,13 @@ export default function Stock() {
         setCurrentPage(1);
       },
     }),
-    [pagination?.total, pagination?.limit, stockPage?.length, currentPage, rowsPerPage],
+    [
+      pagination?.total,
+      pagination?.limit,
+      stockPage?.length,
+      currentPage,
+      rowsPerPage,
+    ],
   );
 
   const serverFiltering = useMemo(
@@ -207,34 +204,6 @@ export default function Stock() {
         serverFiltering={serverFiltering}
         filterFields={[
           { key: "name", label: "Producto" },
-          {
-            key: "id_subcategory",
-            label: "Subcategoria",
-            type: "select",
-            options: subcategoriaOptions,
-            emptyOption: "Todas",
-          },
-          {
-            key: "id_category",
-            label: "Categoria",
-            type: "select",
-            options: categoriasOptions,
-            emptyOption: "Todas",
-          },
-          {
-            key: "id_family",
-            label: "Familia",
-            type: "select",
-            options: familiasOptions,
-            emptyOption: "Todas",
-          },
-          {
-            key: "id_unit",
-            label: "Unidad",
-            type: "select",
-            options: unidadesOptions,
-            emptyOption: "Todas",
-          },
           {
             key: "has_stock",
             label: "Disponibilidad",
