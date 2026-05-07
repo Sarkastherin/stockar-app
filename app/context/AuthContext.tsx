@@ -4,6 +4,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from "react";
 import { setCrudActorResolver } from "~/services/crudFactory";
 export const MODE_DEV = import.meta.env.MODE === "development";
@@ -53,6 +54,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Mutex para serializar refresh: evita que múltiples 401 simultáneos
+  // consuman el refresh token más de una vez (token rotation lo invalida).
+  const refreshPromiseRef = useRef<Promise<boolean> | null>(null);
+
 
   const me = useCallback(async (): Promise<any | null> => {
     const url = resolveUrl("/api/auth/me") as string;
@@ -121,18 +127,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const tryRefresh = useCallback(async (): Promise<boolean> => {
     const url = resolveUrl("/api/auth/refresh") as string;
-    const res = await fetch(url, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-    });
-    if (!res.ok) return false;
-    // If refresh succeeded, update user state from /me (optional but useful)
+    // Mutex: si ya hay un refresh en curso, reutilizar la misma promesa
+    // Esto evita la race condition cuando múltiples peticiones fallan con 401
+    // simultáneamente y cada una intentaría consumir el refresh token (rotación).
+    if (refreshPromiseRef.current) return refreshPromiseRef.current;
+
+    const promise = (async (): Promise<boolean> => {
+      const res = await fetch(url, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) return false;
+      try {
+        const body = await me();
+        setUser(body?.user ?? null);
+      } catch {}
+      return true;
+    })();
+
+    refreshPromiseRef.current = promise;
     try {
-      const body = await me();
-      setUser(body?.user ?? null);
-    } catch {}
-    return true;
+      return await promise;
+    } finally {
+      refreshPromiseRef.current = null;
+    }
   }, [me]);
 
   const fetchWithAuth = useCallback(
@@ -200,28 +218,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         const result = await me();
         if (!mounted) return;
-        setUser(result?.user ?? null);
-      } catch (err: any) {
-        // Si el error es 401, intenta refresh
-        if (err?.message?.includes('401')) {
-          try {
-            const refreshed = await tryRefresh();
-            if (refreshed) {
-              const result = await me();
-              if (!mounted) return;
-              setUser(result?.user ?? null);
-            } else {
-              if (!mounted) return;
-              setUser(null);
-            }
-          } catch {
+        if (result !== null) {
+          // Access token is valid
+          setUser(result?.user ?? null);
+        } else {
+          // Access token expired or absent — try refresh before giving up
+          const refreshed = await tryRefresh();
+          if (!mounted) return;
+          if (refreshed) {
+            const fresh = await me();
             if (!mounted) return;
+            setUser(fresh?.user ?? null);
+          } else {
             setUser(null);
           }
-        } else {
-          if (!mounted) return;
-          setUser(null);
         }
+      } catch {
+        if (!mounted) return;
+        setUser(null);
       } finally {
         if (!mounted) return;
         setLoading(false);
@@ -231,6 +245,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       mounted = false;
     };
   }, [me, tryRefresh]);
+
+  // Proactive token refresh: renew the access token every 13 min while logged in
+  // (access token expires in 15 min — this prevents reactive-only expiry handling)
+  useEffect(() => {
+    if (!user) return;
+    const REFRESH_INTERVAL_MS = 13 * 60 * 1000;
+    const id = setInterval(async () => {
+      const ok = await tryRefresh();
+      if (!ok) {
+        setUser(null);
+        window.location.href = "/login?expired=1";
+      }
+    }, REFRESH_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [user, tryRefresh]);
 
   useEffect(() => {
     setCrudActorResolver(() => user?.id ?? null);
