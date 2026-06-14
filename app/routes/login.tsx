@@ -51,10 +51,10 @@ export default function Login() {
   }, [loading, user, navigate]);
 
   const onSubmit = async (data: LoginFormInputs) => {
-    const { email, password } = data;
+    const { email, password, rememberMe } = data;
     setSubmitError(null);
     try {
-      await login(email, password);
+      await login(email, password, rememberMe);
       navigate("/", { replace: true });
     } catch (error) {
       setSubmitError("No se pudo iniciar sesión. Verifica tus credenciales.");
@@ -122,7 +122,7 @@ export default function Login() {
           />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Checkbox id="remember" />
+              <Checkbox id="remember" {...register("rememberMe")} />
               <Label htmlFor="remember">Recuérdame</Label>
             </div>
             <Link

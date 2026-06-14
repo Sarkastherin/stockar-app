@@ -10,10 +10,9 @@ import { setCrudActorResolver } from "~/services/crudFactory";
 export const MODE_DEV = import.meta.env.MODE === "development";
 
 const API_BASE_URL = import.meta.env.MODE === "development" ? import.meta.env.VITE_API_URL_DEV : import.meta.env.VITE_API_URL;
-console.log("Running in development mode:", MODE_DEV, "API_BASE_URL:", API_BASE_URL);
 export interface AuthContextType {
   me: () => Promise<any | null>;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<{ token?: string }>;
   resetPassword: (
@@ -75,13 +74,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     throw new Error(`me() failed: ${res.status}`);
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string, rememberMe = false) => {
     const url = resolveUrl("/api/auth/login") as string;
     const res = await fetch(url, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, rememberMe }),
     });
     if (!res.ok) throw new Error("Login failed");
     const data = await res.json();

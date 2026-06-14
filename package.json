@@ -8,7 +8,8 @@
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
-    "generate:movements": "node scripts/generateMovements.js"
+    "generate:movements": "node scripts/generateMovements.js",
+    "deploy": "bash ./scripts/deploy.sh"
   },
   "dependencies": {
     "@react-router/node": "7.12.0",
