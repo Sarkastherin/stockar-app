@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import type { MovimientoDB } from "~/types/movimientos";
@@ -168,6 +169,25 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [usuarios, setUsuarios] = useState<UsuarioDB[] | null>(null);
 
   const [stockItems, setStockItems] = useState<StockItem[] | null>(null);
+  const inFlightRequestsRef = useRef<{
+    productos: Promise<ProductoDB[] | null> | null;
+    unidades: Promise<UnidadesDB[] | null> | null;
+    familias: Promise<FamiliaDB[] | null> | null;
+    categorias: Promise<CategoriaDB[] | null> | null;
+    subcategorias: Promise<SubcategoriaDB[] | null> | null;
+    movimientos: Promise<MovimientoDB[] | null> | null;
+    usuarios: Promise<UsuarioDB[] | null> | null;
+    ubicaciones: Promise<UbicacionDB[] | null> | null;
+  }>({
+    productos: null,
+    unidades: null,
+    familias: null,
+    categorias: null,
+    subcategorias: null,
+    movimientos: null,
+    usuarios: null,
+    ubicaciones: null,
+  });
   /* GETS */
   const fetchAndSetData = useCallback(
     async <T,>(
@@ -198,60 +218,108 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     [],
   );
   const getProductos = useCallback(async () => {
-    const productosData = await fetchAndSetData<ProductoDB>(
+    if (inFlightRequestsRef.current.productos) {
+      return inFlightRequestsRef.current.productos;
+    }
+    const request = fetchAndSetData<ProductoDB>(
       productsServices,
       setProductos,
-    );
-    return productosData;
+    ).finally(() => {
+      inFlightRequestsRef.current.productos = null;
+    });
+    inFlightRequestsRef.current.productos = request;
+    return request;
   }, [fetchAndSetData, productsServices]);
   const getUnidades = useCallback(async () => {
-    const unidadesData = await fetchAndSetData<UnidadesDB>(
+    if (inFlightRequestsRef.current.unidades) {
+      return inFlightRequestsRef.current.unidades;
+    }
+    const request = fetchAndSetData<UnidadesDB>(
       unitsServices,
       setUnidades,
-    );
-    return unidadesData;
+    ).finally(() => {
+      inFlightRequestsRef.current.unidades = null;
+    });
+    inFlightRequestsRef.current.unidades = request;
+    return request;
   }, [fetchAndSetData, unitsServices]);
   const getFamilias = useCallback(async () => {
-    const familiasData = await fetchAndSetData<FamiliaDB>(
+    if (inFlightRequestsRef.current.familias) {
+      return inFlightRequestsRef.current.familias;
+    }
+    const request = fetchAndSetData<FamiliaDB>(
       familiesServices,
       setFamilias,
-    );
-    return familiasData;
+    ).finally(() => {
+      inFlightRequestsRef.current.familias = null;
+    });
+    inFlightRequestsRef.current.familias = request;
+    return request;
   }, [fetchAndSetData, familiesServices]);
   const getUbicaciones = useCallback(async () => {
-    const ubicacionesData = await fetchAndSetData<UbicacionDB>(
+    if (inFlightRequestsRef.current.ubicaciones) {
+      return inFlightRequestsRef.current.ubicaciones;
+    }
+    const request = fetchAndSetData<UbicacionDB>(
       locationsServices,
       setUbicaciones,
-    );
-    return ubicacionesData;
+    ).finally(() => {
+      inFlightRequestsRef.current.ubicaciones = null;
+    });
+    inFlightRequestsRef.current.ubicaciones = request;
+    return request;
   }, [fetchAndSetData, locationsServices]);
   const getCategorias = useCallback(async () => {
-    const categoriasData = await fetchAndSetData<CategoriaDB>(
+    if (inFlightRequestsRef.current.categorias) {
+      return inFlightRequestsRef.current.categorias;
+    }
+    const request = fetchAndSetData<CategoriaDB>(
       categoriesServices,
       setCategorias,
-    );
-    return categoriasData;
+    ).finally(() => {
+      inFlightRequestsRef.current.categorias = null;
+    });
+    inFlightRequestsRef.current.categorias = request;
+    return request;
   }, [fetchAndSetData, categoriesServices]);
   const getSubcategorias = useCallback(async () => {
-    const subcategoriasData = await fetchAndSetData<SubcategoriaDB>(
+    if (inFlightRequestsRef.current.subcategorias) {
+      return inFlightRequestsRef.current.subcategorias;
+    }
+    const request = fetchAndSetData<SubcategoriaDB>(
       subcategoriesServices,
       setSubcategorias,
-    );
-    return subcategoriasData;
+    ).finally(() => {
+      inFlightRequestsRef.current.subcategorias = null;
+    });
+    inFlightRequestsRef.current.subcategorias = request;
+    return request;
   }, [fetchAndSetData, subcategoriesServices]);
   const getMovimientos = useCallback(async () => {
-    const movimientosData = await fetchAndSetData<MovimientoDB>(
+    if (inFlightRequestsRef.current.movimientos) {
+      return inFlightRequestsRef.current.movimientos;
+    }
+    const request = fetchAndSetData<MovimientoDB>(
       movementsServices,
       setMovimientos,
-    );
-    return movimientosData;
+    ).finally(() => {
+      inFlightRequestsRef.current.movimientos = null;
+    });
+    inFlightRequestsRef.current.movimientos = request;
+    return request;
   }, [fetchAndSetData, movementsServices]);
   const getUsuarios = useCallback(async () => {
-    const usuariosData = await fetchAndSetData<UsuarioDB>(
+    if (inFlightRequestsRef.current.usuarios) {
+      return inFlightRequestsRef.current.usuarios;
+    }
+    const request = fetchAndSetData<UsuarioDB>(
       userServices,
       setUsuarios,
-    );
-    return usuariosData;
+    ).finally(() => {
+      inFlightRequestsRef.current.usuarios = null;
+    });
+    inFlightRequestsRef.current.usuarios = request;
+    return request;
   }, [fetchAndSetData, userServices]);
 
   /* GETS Anidados */
